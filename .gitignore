@@ -1,0 +1,14 @@
+# Binary
+dropfile
+
+# Runtime
+uploads/
+
+# Deploy config (contains server details)
+deploy.sh
+
+# Docker (not used)
+Dockerfile
+
+# OS
+.DS_Store
