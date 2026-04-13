@@ -11,6 +11,12 @@ Instant temporary file sharing from terminal or browser.
 - Drag and drop support.
 - Terminal-friendly via curl.
 
+## Privacy
+
+- Discovery and sync are localized to your Public IP address.
+- Live broadcasts are only visible to devices sharing your internet connection.
+- Text clipboard data is ephemeral and never stored on the server's disk.
+
 ## Usage
 
 ### Browser
