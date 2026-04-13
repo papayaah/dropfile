@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE DROPFILE CHRONICLE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@900&family=Roboto+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #f0f0f0;
+            color: #111;
+            font-family: 'Roboto Mono', monospace;
+            padding: 40px;
+        }
+
+        .paper {
+            max-width: 1000px;
+            margin: 0 auto;
+            border: 4px solid #111;
+            background: #fff;
+            padding: 40px;
+            box-shadow: 20px 20px 0 #111;
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 8px double #111;
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 6rem;
+            text-transform: uppercase;
+            letter-spacing: -5px;
+            line-height: 0.8;
+            margin-bottom: 10px;
+        }
+
+        .meta {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 40px;
+            border-bottom: 2px solid #111;
+            padding-bottom: 40px;
+        }
+
+        .dropzone {
+            border: 4px solid #111;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            cursor: crosshair;
+            transition: background 0.2s;
+        }
+
+        .dropzone:hover {
+            background: #111;
+            color: #fff;
+        }
+
+        .dropzone h2 {
+            font-size: 3rem;
+            text-transform: uppercase;
+        }
+
+        .article {
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .article h3 {
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            background: #111;
+            color: #fff;
+            padding: 5px;
+            display: inline-block;
+        }
+
+        #uploadArea {
+            margin-top: 40px;
+        }
+
+        .upload-row {
+            border: 2px solid #111;
+            padding: 20px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .progress-line {
+            height: 10px;
+            background: #eee;
+            border: 1px solid #111;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #111;
+            width: 0%;
+        }
+
+        .link-btn {
+            background: #111;
+            color: #fff;
+            padding: 10px 20px;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 800px) {
+            h1 {
+                font-size: 3rem;
+            }
+
+            .hero {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="paper">
+        <header>
+            <h1>DROPFILE</h1>
+            <div class="meta">
+                <span>VOL. LXIV ... NO. 001</span>
+                <span>FEBRUARY 19, 2026</span>
+                <span>PRICE: FREE</span>
+            </div>
+        </header>
+
+        <div class="hero">
+            <div class="dropzone" onclick="document.getElementById('fileInput').click()">
+                <h2>FILE TRANSFER</h2>
+                <p>[ CLICK TO EXECUTE ]</p>
+                <input type="file" id="fileInput" multiple style="display:none">
+            </div>
+            <div class="article">
+                <h3>The Protocol</h3>
+                <p>Transferring files across the digital void has never been more raw. 7 days to live. 100 megabytes of
+                    truth. No registration required for the brave. We do not track and we do not care who you are. The
+                    data exists until it doesn't.</p>
+            </div>
+        </div>
+
+        <div id="uploadArea"></div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+
+        fileInput.addEventListener('change', () => { handleFiles(fileInput.files); fileInput.value = ''; });
+
+        function handleFiles(files) {
+            for (const file of files) uploadFile(file);
+        }
+
+        function uploadFile(file) {
+            const item = document.createElement('div');
+            item.className = 'upload-row-container';
+            item.innerHTML = `
+                <div class="upload-row">
+                    <div><b>FILE:</b> ${file.name.toUpperCase()}</div>
+                    <div class="status">0%</div>
+                </div>
+                <div class="progress-line"><div class="progress-fill"></div></div>
+                <div class="link-div" style="display:none">
+                    <a href="#" target="_blank" class="link-btn">EXTRACT DATA成果</a>
+                </div>
+                <hr style="margin: 20px 0; border: 1px solid #111;">
+            `;
+            uploadArea.prepend(item);
+
+            const bar = item.querySelector('.progress-fill');
+            const status = item.querySelector('.status');
+            const linkDiv = item.querySelector('.link-div');
+            const urlA = item.querySelector('a');
+
+            const fd = new FormData();
+            fd.append('file', file);
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/');
+            xhr.upload.onprogress = e => {
+                if (e.lengthComputable) {
+                    const p = Math.round(e.loaded / e.total * 100);
+                    bar.style.width = p + '%';
+                    status.textContent = p + '%';
+                }
+            };
+            xhr.onload = () => {
+                if (xhr.status === 201) {
+                    const data = JSON.parse(xhr.responseText);
+                    linkDiv.style.display = 'block';
+                    urlA.href = data.url;
+                }
+            };
+            xhr.send(fd);
+        }
+    </script>
+</body>
+
+</html>

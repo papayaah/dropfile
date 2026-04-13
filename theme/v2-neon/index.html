@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DROPFILE // NEON-DRIVE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;800&family=Syncopate:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505;
+            --neon-cyan: #00f3ff;
+            --neon-pink: #ff00ff;
+            --neon-magenta: #bc13fe;
+            --neon-green: #39ff14;
+            --glass: rgba(255, 255, 255, 0.03);
+            --border: rgba(0, 243, 255, 0.2);
+        }
+
+        [data-theme="light"] {
+            --bg: #f0f0f0;
+            --neon-cyan: #0088cc;
+            --neon-pink: #cc0088;
+            --neon-magenta: #8800cc;
+            --neon-green: #008800;
+            --glass: rgba(0, 0, 0, 0.05);
+            --border: rgba(0, 136, 204, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: #fff;
+            font-family: 'JetBrains+Mono', monospace;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image:
+                linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Perspective Grid */
+        .ground-grid {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 40vh;
+            background-image:
+                linear-gradient(transparent, var(--bg)),
+                linear-gradient(90deg, var(--neon-cyan) 1px, transparent 1px),
+                linear-gradient(0deg, var(--neon-cyan) 1px, transparent 1px);
+            background-size: 100% 100%, 50px 50px, 50px 50px;
+            transform: perspective(500px) rotateX(60deg);
+            transform-origin: bottom;
+            z-index: -1;
+            opacity: 0.15;
+            animation: grid-move 5s linear infinite;
+        }
+
+        @keyframes grid-move {
+            from {
+                background-position: 0 0;
+            }
+
+            to {
+                background-position: 0 50px;
+            }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 5rem 2rem;
+            width: 100%;
+            flex: 1;
+        }
+
+        /* Neon Header */
+        header {
+            text-align: center;
+            margin-bottom: 6rem;
+        }
+
+        h1 {
+            font-family: 'Syncopate', sans-serif;
+            font-size: 4rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5rem;
+            color: #fff;
+            text-shadow:
+                0 0 5px #fff,
+                0 0 10px #fff,
+                0 0 20px var(--neon-cyan),
+                0 0 40px var(--neon-cyan),
+                0 0 80px var(--neon-cyan);
+            margin-bottom: 1rem;
+            animation: flicker 3s infinite;
+        }
+
+        @keyframes flicker {
+
+            0%,
+            18%,
+            22%,
+            25%,
+            53%,
+            57%,
+            100% {
+                text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 20px var(--neon-cyan), 0 0 40px var(--neon-cyan);
+                opacity: 1;
+            }
+
+            20%,
+            24%,
+            55% {
+                text-shadow: none;
+                opacity: 0.5;
+            }
+        }
+
+        .tagline {
+            color: var(--neon-pink);
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 2px;
+            font-size: 0.9rem;
+            text-shadow: 0 0 10px var(--neon-pink);
+        }
+
+        /* Neon Dropzone */
+        .neon-drop {
+            position: relative;
+            background: var(--glass);
+            border: 2px solid var(--neon-cyan);
+            border-radius: 4px;
+            padding: 5rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: inset 0 0 15px var(--neon-cyan), 0 0 15px var(--neon-cyan);
+            transition: all 0.3s;
+            overflow: hidden;
+        }
+
+        .neon-drop:hover {
+            box-shadow: inset 0 0 30px var(--neon-cyan), 0 0 30px var(--neon-cyan);
+            transform: scale(1.02);
+            border-color: var(--neon-pink);
+            box-shadow: inset 0 0 15px var(--neon-pink), 0 0 15px var(--neon-pink);
+        }
+
+        /* Scanning Line */
+        .neon-drop::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--neon-cyan);
+            box-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan);
+            animation: scan 3s linear infinite;
+        }
+
+        .neon-drop:hover::after {
+            background: var(--neon-pink);
+            box-shadow: 0 0 10px var(--neon-pink), 0 0 20px var(--neon-pink);
+        }
+
+        @keyframes scan {
+            0% {
+                top: -2%;
+            }
+
+            100% {
+                top: 102%;
+            }
+        }
+
+        .drop-icon {
+            font-size: 4rem;
+            color: #fff;
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 0 10px var(--neon-cyan));
+        }
+
+        .drop-text {
+            font-size: 1.2rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Digital Glitch Elements */
+        .features {
+            margin-top: 4rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--glass);
+            border-left: 4px solid var(--neon-magenta);
+            padding: 1.5rem;
+            position: relative;
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            background: rgba(188, 19, 254, 0.1);
+            transform: translateX(10px);
+        }
+
+        .card h3 {
+            color: var(--neon-magenta);
+            text-transform: uppercase;
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+        }
+
+        .card p {
+            font-size: 0.85rem;
+            color: #bbb;
+            line-height: 1.6;
+        }
+
+        /* CLI Section */
+        .cli-section {
+            margin-top: 4rem;
+            background: #000;
+            padding: 2rem;
+            border: 1px dashed var(--neon-green);
+            box-shadow: 0 0 10px rgba(57, 255, 20, 0.2);
+            position: relative;
+        }
+
+        .cli-label {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--bg);
+            padding: 0 10px;
+            color: var(--neon-green);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+        }
+
+        .code-line {
+            display: flex;
+            gap: 1rem;
+            color: var(--neon-green);
+        }
+
+        /* Upload States */
+        .upload-stack {
+            margin-top: 2rem;
+        }
+
+        .upload-row {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            margin-bottom: 1rem;
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .progress-container {
+            height: 4px;
+            background: #111;
+            margin: 1rem 0;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+            box-shadow: 0 0 10px var(--neon-cyan);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .link-display {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .url-box {
+            flex: 1;
+            color: var(--neon-cyan);
+            font-weight: 800;
+            text-shadow: 0 0 5px var(--neon-cyan);
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .copy-trigger {
+            background: none;
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 0.5rem 1rem;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: 0.2s;
+        }
+
+        .copy-trigger:hover {
+            background: var(--neon-cyan);
+            color: #000;
+        }
+
+        /* Theme Toggle */
+        .neon-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: none;
+            border: 2px solid var(--neon-pink);
+            color: var(--neon-pink);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--neon-pink);
+            font-family: 'Syncopate', sans-serif;
+            font-size: 0.6rem;
+            z-index: 100;
+        }
+
+        footer {
+            text-align: center;
+            padding: 4rem;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.7rem;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .container {
+                padding: 2rem 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <button class="neon-toggle" id="themeToggle" onclick="toggleMode()">MOD</button>
+    <div class="ground-grid"></div>
+
+    <main class="container">
+        <header>
+            <h1>DROPFILE</h1>
+            <p class="tagline">>> HYPER-SPEED FILE SYSTEM <<< /p>
+        </header>
+
+        <div class="neon-drop" id="dropzone">
+            <div class="drop-icon">⇪</div>
+            <div class="drop-text">INITIALIZE UPLOAD</div>
+            <p style="font-size: 0.7rem; opacity: 0.5;">DROP FILES OR CLICK TO BEGIN SEQUENCE</p>
+            <input type="file" id="fileInput" multiple style="display:none">
+        </div>
+
+        <div class="upload-stack" id="uploadArea"></div>
+
+        <section class="features">
+            <div class="card">
+                <h3>ANONYMOUS</h3>
+                <p>ZERO LOGS. ZERO TRACING. TOTAL PRIVACY IN THE GRID.</p>
+            </div>
+            <div class="card" style="border-color: var(--neon-cyan)">
+                <h3>7-DAY LIFE</h3>
+                <p>FILES SELF-DESTRUCT AFTER 168 HOURS. NO ARCHIVES REMAINS.</p>
+            </div>
+            <div class="card" style="border-color: var(--neon-green)">
+                <h3>CLI FIRST</h3>
+                <p>INTEGRATE DIRECTLY WITH YOUR SHELL. THE TERMINAL IS YOUR GATEWAY.</p>
+            </div>
+        </section>
+
+        <div class="cli-section">
+            <div class="cli-label">COMMAND SYSTEM</div>
+            <div class="code-line">
+                <span>$</span>
+                <span>curl <span style="color:var(--neon-cyan)">dropfile.dev</span> -T data.bin</span>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        SYSTEM ACTIVE // 2026 // DROPFILE.DEV
+    </footer>
+
+    <script>
+        function toggleMode() {
+            const h = document.documentElement;
+            const current = h.getAttribute('data-theme');
+            h.setAttribute('data-theme', current === 'light' ? 'dark' : 'light');
+        }
+
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+
+        dropzone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', () => { handleFiles(fileInput.files); fileInput.value = ''; });
+
+        document.addEventListener('dragover', e => { e.preventDefault(); dropzone.style.borderColor = 'var(--neon-pink)'; });
+        document.addEventListener('dragleave', e => { e.preventDefault(); dropzone.style.borderColor = 'var(--neon-cyan)'; });
+        document.addEventListener('drop', e => {
+            e.preventDefault();
+            dropzone.style.borderColor = 'var(--neon-cyan)';
+            if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+        });
+
+        function handleFiles(files) {
+            for (const file of files) uploadFile(file);
+        }
+
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function uploadFile(file) {
+            const item = document.createElement('div');
+            item.className = 'upload-row';
+            item.innerHTML = `
+            <div style="display:flex; justify-content:space-between; font-size:0.8rem">
+                <span>[ FILE: ${file.name.toUpperCase()} ]</span>
+                <span style="color:var(--neon-cyan)">${formatSize(file.size)}</span>
+            </div>
+            <div class="progress-container"><div class="progress-bar"></div></div>
+            <div class="link-display" style="display:none">
+                <div class="url-box"></div>
+                <button class="copy-trigger">EXTRACT LINK</button>
+            </div>
+        `;
+            uploadArea.prepend(item);
+
+            const bar = item.querySelector('.progress-bar');
+            const display = item.querySelector('.link-display');
+            const urlBox = item.querySelector('.url-box');
+            const copyBtn = item.querySelector('.copy-trigger');
+
+            const fd = new FormData();
+            fd.append('file', file);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/');
+
+            xhr.upload.onprogress = e => {
+                if (e.lengthComputable) bar.style.width = Math.round(e.loaded / e.total * 100) + '%';
+            };
+
+            xhr.onload = () => {
+                if (xhr.status === 201) {
+                    const data = JSON.parse(xhr.responseText);
+                    bar.style.background = 'var(--neon-green)';
+                    bar.style.boxShadow = '0 0 10px var(--neon-green)';
+                    display.style.display = 'flex';
+                    urlBox.textContent = data.url;
+
+                    copyBtn.onclick = () => {
+                        navigator.clipboard.writeText(data.url);
+                        copyBtn.textContent = 'COPIED';
+                        setTimeout(() => copyBtn.textContent = 'EXTRACT LINK', 2000);
+                    };
+                } else {
+                    bar.style.background = 'var(--neon-pink)';
+                }
+            };
+
+            xhr.send(fd);
+        }
+    </script>
+
+</body>
+
+</html>

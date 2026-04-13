@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DROPFILE // DEEP SPACE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --space-bg: #00000a;
+            --hud-blue: #00d2ff;
+            --hud-glow: rgba(0, 210, 255, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--space-bg);
+            color: var(--hud-blue);
+            font-family: 'Orbitron', sans-serif;
+            min-height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Starfield Animation */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: url('https://www.transparenttextures.com/patterns/stardust.png');
+            animation: drift 100s linear infinite;
+        }
+
+        @keyframes drift {
+            from {
+                background-position: 0 0;
+            }
+
+            to {
+                background-position: 1000px 1000px;
+            }
+        }
+
+        .nebula {
+            position: fixed;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(100, 0, 255, 0.1) 0%, transparent 70%);
+            filter: blur(100px);
+            z-index: -2;
+            animation: move-nebula 20s infinite alternate;
+        }
+
+        @keyframes move-nebula {
+            from {
+                transform: translate(-20%, -20%);
+            }
+
+            to {
+                transform: translate(20%, 20%);
+            }
+        }
+
+        .hud-circle {
+            position: relative;
+            width: 600px;
+            height: 600px;
+            border: 1px solid var(--hud-blue);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 20px var(--hud-glow), inset 0 0 20px var(--hud-glow);
+        }
+
+        .hud-circle::before {
+            content: '';
+            position: absolute;
+            width: 110%;
+            height: 110%;
+            border: 1px dashed var(--hud-blue);
+            border-radius: 50%;
+            animation: rotate 60s linear infinite;
+            opacity: 0.3;
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .content {
+            text-align: center;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 3rem;
+            letter-spacing: 1rem;
+            text-shadow: 0 0 10px var(--hud-blue);
+            margin-bottom: 2rem;
+        }
+
+        .drop-zone {
+            width: 300px;
+            height: 300px;
+            border: 2px solid var(--hud-blue);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: 0.3s;
+            background: rgba(0, 210, 255, 0.05);
+        }
+
+        .drop-zone:hover {
+            background: rgba(0, 210, 255, 0.2);
+            box-shadow: 0 0 30px var(--hud-blue);
+            transform: scale(1.05);
+        }
+
+        .upload-area {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            text-align: right;
+            font-size: 0.7rem;
+        }
+
+        .upload-item {
+            margin-bottom: 1rem;
+            border-right: 2px solid var(--hud-blue);
+            padding-right: 10px;
+        }
+
+        .progress-bar {
+            height: 2px;
+            background: var(--hud-blue);
+            width: 0%;
+            margin-top: 5px;
+            box-shadow: 0 0 5px var(--hud-blue);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="stars"></div>
+    <div class="nebula"></div>
+
+    <div class="hud-circle">
+        <div class="content">
+            <h1>DROPFILE</h1>
+            <div class="drop-zone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+                <div style="font-size: 0.8rem; margin-bottom: 10px;">SECTOR: DATA_TRANS</div>
+                <div style="font-size: 2rem;">⍋</div>
+                <div style="font-size: 0.7rem; margin-top: 10px;">INITIATE BEAM</div>
+            </div>
+            <input type="file" id="fileInput" multiple style="display:none">
+        </div>
+    </div>
+
+    <div class="upload-area" id="uploadArea"></div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+
+        fileInput.addEventListener('change', () => { handleFiles(fileInput.files); fileInput.value = ''; });
+
+        function handleFiles(files) {
+            for (const file of files) uploadFile(file);
+        }
+
+        function uploadFile(file) {
+            const item = document.createElement('div');
+            item.className = 'upload-item';
+            item.innerHTML = `
+                <div>DATA_PACKET: ${file.name.toUpperCase()}</div>
+                <div class="progress-bar"></div>
+                <div class="url" style="display:none; margin-top:5px;">
+                    <a href="#" target="_blank" style="color:var(--hud-blue); text-decoration:none;">// DOWNLOAD_READY</a>
+                </div>
+            `;
+            uploadArea.prepend(item);
+
+            const bar = item.querySelector('.progress-bar');
+            const urlDiv = item.querySelector('.url');
+            const urlA = item.querySelector('a');
+
+            const fd = new FormData();
+            fd.append('file', file);
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/');
+            xhr.upload.onprogress = e => {
+                if (e.lengthComputable) bar.style.width = Math.round(e.loaded / e.total * 100) + '%';
+            };
+            xhr.onload = () => {
+                if (xhr.status === 201) {
+                    const data = JSON.parse(xhr.responseText);
+                    urlDiv.style.display = 'block';
+                    urlA.href = data.url;
+                }
+            };
+            xhr.send(fd);
+        }
+    </script>
+</body>
+
+</html>

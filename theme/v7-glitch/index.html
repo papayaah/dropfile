@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DROPFILE // CORRUPTION</title>
+    <style>
+        :root {
+            --red: #ff0000;
+            --cyan: #00ffff;
+            --white: #ffffff;
+            --black: #000000;
+        }
+
+        @keyframes glitch {
+            0% {
+                transform: translate(0);
+            }
+
+            20% {
+                transform: translate(-5px, 5px);
+            }
+
+            40% {
+                transform: translate(-5px, -5px);
+            }
+
+            60% {
+                transform: translate(5px, 5px);
+            }
+
+            80% {
+                transform: translate(5px, -5px);
+            }
+
+            100% {
+                transform: translate(0);
+            }
+        }
+
+        @keyframes noise {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 100% 100%;
+            }
+        }
+
+        body {
+            background-color: var(--black);
+            color: var(--white);
+            font-family: 'Courier New', Courier, monospace;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.15;
+            z-index: 100;
+            pointer-events: none;
+            animation: noise 0.2s infinite;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 5rem 2rem;
+            position: relative;
+        }
+
+        .glitch-text {
+            font-size: 5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            position: relative;
+            display: inline-block;
+            animation: glitch 0.3s infinite;
+        }
+
+        .glitch-text::before,
+        .glitch-text::after {
+            content: "DROPFILE";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.8;
+        }
+
+        .glitch-text::before {
+            color: var(--cyan);
+            z-index: -1;
+            animation: glitch 0.3s infinite reverse;
+        }
+
+        .glitch-text::after {
+            color: var(--red);
+            z-index: -2;
+            animation: glitch 0.2s infinite;
+        }
+
+        .dropzone {
+            border: 8px solid var(--white);
+            padding: 4rem;
+            margin-top: 4rem;
+            text-align: center;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .dropzone:hover {
+            border-color: var(--cyan);
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+        .upload-item {
+            border: 2px solid var(--white);
+            padding: 1rem;
+            margin-top: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .bar-container {
+            height: 10px;
+            background: #333;
+            margin-top: 1rem;
+        }
+
+        .bar {
+            height: 100%;
+            background: var(--cyan);
+            width: 0%;
+            box-shadow: 0 0 10px var(--cyan);
+        }
+
+        footer {
+            margin-top: 5rem;
+            font-size: 0.8rem;
+            letter-spacing: 5px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="glitch-text">DROPFILE</div>
+        <p style="color: var(--cyan); letter-spacing: 10px;">// SYSTEM_FAILURE_IMMUNE //</p>
+
+        <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+            <h2 style="font-size: 2rem;">INSERT_DATA</h2>
+            <p>[ RAW_FILE_TRANSFER ]</p>
+            <input type="file" id="fileInput" multiple style="display:none">
+        </div>
+
+        <div id="uploadArea"></div>
+
+        <footer>
+            LOG_001 // ERROR_NONE // SHARING_ACTIVE
+        </footer>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+
+        fileInput.addEventListener('change', () => { handleFiles(fileInput.files); fileInput.value = ''; });
+
+        function handleFiles(files) {
+            for (const file of files) uploadFile(file);
+        }
+
+        function uploadFile(file) {
+            const item = document.createElement('div');
+            item.className = 'upload-item';
+            item.innerHTML = `
+                <div>TRANSMITTING: ${file.name.toUpperCase()}</div>
+                <div class="bar-container"><div class="bar"></div></div>
+                <div class="url" style="display:none; margin-top:1rem; word-break:break-all;">
+                    SRC: <a href="#" target="_blank" style="color:var(--cyan)"></a>
+                </div>
+            `;
+            uploadArea.prepend(item);
+
+            const bar = item.querySelector('.bar');
+            const urlDiv = item.querySelector('.url');
+            const urlA = item.querySelector('a');
+
+            const fd = new FormData();
+            fd.append('file', file);
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/');
+            xhr.upload.onprogress = e => {
+                if (e.lengthComputable) bar.style.width = Math.round(e.loaded / e.total * 100) + '%';
+            };
+            xhr.onload = () => {
+                if (xhr.status === 201) {
+                    const data = JSON.parse(xhr.responseText);
+                    urlDiv.style.display = 'block';
+                    urlA.href = data.url;
+                    urlA.textContent = data.url;
+                }
+            };
+            xhr.send(fd);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DROPFILE // SYSTEM v4.0</title>
+    <style>
+        :root {
+            --amber: #ffb000;
+            --bg: #121010;
+        }
+
+        @font-face {
+            font-family: 'Terminus';
+            src: local('Courier New'), local('Courier');
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--amber);
+            font-family: 'Terminus', 'Courier New', Courier, monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Scanlines and Flicker */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        body::after {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: rgba(18, 16, 16, 0.1);
+            opacity: 0;
+            z-index: 2;
+            pointer-events: none;
+            animation: flicker 0.15s infinite;
+        }
+
+        @keyframes flicker {
+            0% {
+                opacity: 0.27861;
+            }
+
+            5% {
+                opacity: 0.34769;
+            }
+
+            10% {
+                opacity: 0.23604;
+            }
+
+            15% {
+                opacity: 0.90626;
+            }
+
+            20% {
+                opacity: 0.18128;
+            }
+
+            25% {
+                opacity: 0.83891;
+            }
+
+            30% {
+                opacity: 0.65583;
+            }
+
+            35% {
+                opacity: 0.57807;
+            }
+
+            40% {
+                opacity: 0.26559;
+            }
+
+            45% {
+                opacity: 0.84693;
+            }
+
+            50% {
+                opacity: 0.96019;
+            }
+
+            55% {
+                opacity: 0.08594;
+            }
+
+            60% {
+                opacity: 0.20313;
+            }
+
+            65% {
+                opacity: 0.71988;
+            }
+
+            70% {
+                opacity: 0.53455;
+            }
+
+            75% {
+                opacity: 0.37288;
+            }
+
+            80% {
+                opacity: 0.71428;
+            }
+
+            85% {
+                opacity: 0.70419;
+            }
+
+            90% {
+                opacity: 0.7003;
+            }
+
+            95% {
+                opacity: 0.3619;
+            }
+
+            100% {
+                opacity: 0.24387;
+            }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            border: 1px solid var(--amber);
+            padding: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 0 10px var(--amber);
+        }
+
+        h1 {
+            font-size: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 5px var(--amber);
+        }
+
+        .sys-log {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            opacity: 0.8;
+        }
+
+        .terminal-block {
+            border: 1px solid var(--amber);
+            padding: 20px;
+            background: rgba(255, 176, 0, 0.05);
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .terminal-block::before {
+            content: "[ STORAGE_UNIT_04 ]";
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            background: var(--bg);
+            padding: 0 10px;
+            font-size: 0.8rem;
+        }
+
+        .dropzone {
+            padding: 60px 20px;
+            text-align: center;
+            border: 1px dashed var(--amber);
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .dropzone:hover {
+            background: rgba(255, 176, 0, 0.1);
+        }
+
+        .upload-stack {
+            margin-top: 40px;
+        }
+
+        .upload-item {
+            border: 1px solid var(--amber);
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .progress-container {
+            border: 1px solid var(--amber);
+            height: 20px;
+            margin: 10px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--amber);
+            width: 0%;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 1.2rem;
+            background: var(--amber);
+            vertical-align: middle;
+            animation: blink 0.8s infinite;
+            margin-left: 5px;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+        }
+
+        footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 40px;
+            font-size: 0.8rem;
+            opacity: 0.6;
+            letter-spacing: 2px;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>DROPFILE(TM) v4.0</h1>
+            <div class="sys-log">
+                SERIAL_NO: 77-DF-2026<br>
+                SECURE_LINK_PROTOCOL: ENABLED<br>
+                ENCRYPTION: HARDWARE_DRIVEN<br>
+                STATUS: AWAITING_INPUT<span class="cursor"></span>
+            </div>
+        </header>
+
+        <div class="terminal-block">
+            <label for="fileInput">
+                <div class="dropzone" id="dropzone">
+                    > INITIALIZE_SERIAL_TRANSFER...<br><br>
+                    DRAG_AND_DROP_FILES_HERE<br>
+                    [ OR_CLICK_TO_SCAN_FILESYSTEM ]
+                </div>
+            </label>
+            <input type="file" id="fileInput" multiple style="display:none">
+        </div>
+
+        <div class="upload-stack" id="uploadArea"></div>
+
+        <div class="terminal-block">
+            <div class="sys-log">
+                -- SYSTEM SPECIFICATIONS --<br>
+                * MAX_CAPACITY: 100.00MB / FILE<br>
+                * RETENTION_PERIOD: 168 HOURS<br>
+                * AUTHENTICATION: NOT_REQUIRED<br>
+                * PROTOCOL: HTTP/1.1 SHRD
+            </div>
+        </div>
+
+        <footer>
+            (C) 1982-2026 DROPFILE CORPORATION. ALL RIGHTS RESERVED.
+        </footer>
+    </div>
+
+    <script>
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+
+        fileInput.addEventListener('change', () => { handleFiles(fileInput.files); fileInput.value = ''; });
+
+        function handleFiles(files) {
+            for (const file of files) uploadFile(file);
+        }
+
+        function uploadFile(file) {
+            const item = document.createElement('div');
+            item.className = 'upload-item';
+            item.innerHTML = `
+            <div>TRANSMITTING: ${file.name.toUpperCase()}</div>
+            <div class="progress-container"><div class="progress-bar"></div></div>
+            <div class="result" style="display:none">
+                LINK_GENERATED: <a href="#" target="_blank" class="url"></a>
+            </div>
+        `;
+            uploadArea.prepend(item);
+
+            const bar = item.querySelector('.progress-bar');
+            const res = item.querySelector('.result');
+            const urlA = item.querySelector('.url');
+
+            const fd = new FormData();
+            fd.append('file', file);
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/');
+            xhr.upload.onprogress = e => {
+                if (e.lengthComputable) bar.style.width = Math.round(e.loaded / e.total * 100) + '%';
+            };
+            xhr.onload = () => {
+                if (xhr.status === 201) {
+                    const data = JSON.parse(xhr.responseText);
+                    res.style.display = 'block';
+                    urlA.href = data.url;
+                    urlA.textContent = data.url;
+                } else {
+                    item.style.color = '#ff0000';
+                }
+            };
+            xhr.send(fd);
+        }
+    </script>
+
+</body>
+
+</html>

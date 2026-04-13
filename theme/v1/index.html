@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dropfile.dev — Next Gen File Sharing</title>
+    <meta name="description" content="Vibrant, instant file sharing from your terminal or browser.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@300;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #030712;
+            --fg: #f9fafb;
+            --accent: #818cf8;
+            --accent-glow: rgba(129, 140, 248, 0.4);
+            --secondary: #c084fc;
+            --surface: rgba(17, 24, 39, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --success: #10b981;
+            --error: #ef4444;
+            --muted: #9ca3af;
+            --glass-blur: 16px;
+        }
+
+        [data-theme="light"] {
+            --bg: #f8fafc;
+            --fg: #0f172a;
+            --accent: #4f46e5;
+            --accent-glow: rgba(79, 70, 229, 0.2);
+            --secondary: #9333ea;
+            --surface: rgba(255, 255, 255, 0.8);
+            --border: rgba(0, 0, 0, 0.05);
+            --muted: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+            transition: background 0.5s ease;
+        }
+
+        /* Vibrant Background Elements */
+        .blobs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            filter: blur(80px);
+            opacity: 0.6;
+        }
+
+        .blob {
+            position: absolute;
+            width: 50vw;
+            height: 50vw;
+            border-radius: 50%;
+            filter: blur(40px);
+            animation: move 20s infinite alternate;
+        }
+
+        .blob-1 {
+            background: var(--accent);
+            top: -10%;
+            left: -10%;
+            opacity: 0.3;
+        }
+
+        .blob-2 {
+            background: var(--secondary);
+            bottom: -10%;
+            right: -10%;
+            opacity: 0.2;
+            animation-delay: -5s;
+        }
+
+        .blob-3 {
+            background: #3b82f6;
+            top: 40%;
+            right: 10%;
+            width: 300px;
+            height: 300px;
+            opacity: 0.15;
+            animation-delay: -10s;
+        }
+
+        @keyframes move {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            100% {
+                transform: translate(10%, 10%) scale(1.1);
+            }
+        }
+
+        .grid-overlay {
+            position: fixed;
+            inset: 0;
+            background-image: radial-gradient(var(--border) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 4rem 1.5rem;
+            width: 100%;
+            flex: 1;
+            position: relative;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .logo-container {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        h1.logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            background: linear-gradient(135deg, var(--fg) 20%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        .tagline {
+            font-size: 1.1rem;
+            color: var(--muted);
+            font-weight: 300;
+            letter-spacing: 0.02em;
+        }
+
+        /* Vibrant Dropzone */
+        .drop-card {
+            background: var(--surface);
+            backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--border);
+            border-radius: 32px;
+            padding: 4rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+        }
+
+        .drop-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 32px;
+            padding: 2px;
+            background: linear-gradient(135deg, var(--accent), var(--secondary));
+            -webkit-mask:
+                linear-gradient(#fff 0 0) content-box,
+                linear-gradient(#fff 0 0);
+            mask:
+                linear-gradient(#fff 0 0) content-box,
+                linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0.5;
+            transition: opacity 0.4s;
+        }
+
+        .drop-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3), 0 0 40px var(--accent-glow);
+        }
+
+        .drop-card:hover::before {
+            opacity: 1;
+        }
+
+        .drop-icon-wrapper {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--accent), var(--secondary));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            color: white;
+            font-size: 2.5rem;
+            box-shadow: 0 10px 20px rgba(129, 140, 248, 0.3);
+            transition: transform 0.4s;
+        }
+
+        .drop-card:hover .drop-icon-wrapper {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .drop-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .drop-hint {
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        /* Features Section - Vibrant Styling */
+        .features-section {
+            margin-top: 5rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--surface);
+            backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 1.5rem;
+            transition: transform 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: var(--accent);
+        }
+
+        .feature-card p {
+            font-size: 0.9rem;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        /* Terminal Section */
+        .terminal-box {
+            margin-top: 4rem;
+            background: #000;
+            border-radius: 16px;
+            padding: 1.5rem;
+            font-family: 'Space Grotesk', monospace;
+            position: relative;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .terminal-header {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot-red {
+            background: #ff5f56;
+        }
+
+        .dot-yellow {
+            background: #ffbd2e;
+        }
+
+        .dot-green {
+            background: #27c93f;
+        }
+
+        .terminal-body {
+            color: #fff;
+            font-size: 0.95rem;
+        }
+
+        .cmd-line {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .prompt {
+            color: #27c93f;
+        }
+
+        .cmd {
+            color: #f9fafb;
+        }
+
+        .highlight {
+            color: var(--accent);
+        }
+
+        /* Theme Toggle */
+        .theme-toggle-v {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            z-index: 100;
+            width: 50px;
+            height: 50px;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            backdrop-filter: blur(8px);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle-v:hover {
+            background: var(--accent);
+            color: white;
+            transform: rotate(15deg);
+        }
+
+        /* Upload Area */
+        .upload-area {
+            margin-top: 2rem;
+            display: grid;
+            gap: 1rem;
+        }
+
+        .upload-item {
+            background: var(--surface);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .upload-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-name {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .file-size {
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        .progress-track {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--secondary));
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .result-row {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .link-box {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            color: var(--accent);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border: 1px solid var(--border);
+        }
+
+        .copy-btn {
+            background: var(--accent);
+            border: none;
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            filter: brightness(1.1);
+        }
+
+        /* History */
+        .history-header {
+            margin-top: 5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .history-header h2 {
+            font-size: 1.5rem;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .clear-btn {
+            background: none;
+            border: none;
+            color: var(--error);
+            font-size: 0.9rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .history-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .history-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .history-icon {
+            font-size: 1.5rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 600px) {
+            h1.logo {
+                font-size: 2.5rem;
+            }
+
+            .drop-card {
+                padding: 3rem 1.5rem;
+            }
+
+            .theme-toggle-v {
+                top: 1rem;
+                right: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <button class="theme-toggle-v" id="themeToggle" title="Toggle illumination">✦</button>
+
+    <div class="blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+    <div class="grid-overlay"></div>
+
+    <main class="container">
+        <header>
+            <div class="logo-container">
+                <h1 class="logo">dropfile.dev</h1>
+            </div>
+            <p class="tagline">The most vibrant way to share files from terminal or web.</p>
+        </header>
+
+        <div class="drop-card" id="dropzone">
+            <div class="drop-icon-wrapper">
+                <span id="icon">↓</span>
+            </div>
+            <div class="drop-text">Ready for your files</div>
+            <p class="drop-hint">Drop anything here or click to choose from system</p>
+            <p class="drop-hint" style="margin-top:1rem; opacity:0.6; font-size:0.8rem">Max 100MB per file • Expiry in 7
+                days</p>
+            <input type="file" id="fileInput" multiple style="display:none">
+        </div>
+
+        <div class="upload-area" id="uploadArea"></div>
+
+        <section class="features-section">
+            <div class="feature-card">
+                <h3>Terminal God</h3>
+                <p>Curl your files to the moon. No latency, just speed.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Glass Design</h3>
+                <p>A beautiful, modern interface that works anywhere.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Private & Ephemeral</h3>
+                <p>Your data is yours. We delete everything after 7 days.</p>
+            </div>
+        </section>
+
+        <div class="terminal-box">
+            <div class="terminal-header">
+                <div class="dot dot-red"></div>
+                <div class="dot dot-yellow"></div>
+                <div class="dot dot-green"></div>
+            </div>
+            <div class="terminal-body">
+                <div class="cmd-line">
+                    <span class="prompt">λ</span>
+                    <span class="cmd">curl <span class="highlight">dropfile.dev</span> -T music.mp3</span>
+                </div>
+                <div class="cmd-line" style="margin-top:0.5rem; opacity:0.5">
+                    <span># Result: https://dropfile.dev/zXy2/music.mp3</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="historySection" style="display:none">
+            <div class="history-header">
+                <h2>Recent History</h2>
+                <button class="clear-btn" onclick="clearHistory()">Clear All</button>
+            </div>
+            <div class="history-grid" id="historyList"></div>
+        </div>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2026 dropfile.dev — Handcrafted for developers.</p>
+    </footer>
+
+    <script>
+        // Preservation of original logic with UI enhancements
+        const themeBtn = document.getElementById('themeToggle');
+        const body = document.body;
+
+        function initTheme() {
+            const saved = localStorage.getItem('dropfile_theme_v1') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            applyTheme(saved);
+        }
+
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            themeBtn.textContent = theme === 'dark' ? '✦' : '✧';
+            localStorage.setItem('dropfile_theme_v1', theme);
+        }
+
+        themeBtn.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            applyTheme(current === 'dark' ? 'light' : 'dark');
+        });
+
+        initTheme();
+
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+
+        dropzone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', () => { handleFiles(fileInput.files); fileInput.value = ''; });
+
+        // Drag and Drop
+        document.addEventListener('dragover', e => { e.preventDefault(); dropzone.style.transform = 'scale(1.02)'; });
+        document.addEventListener('dragleave', e => { e.preventDefault(); dropzone.style.transform = 'scale(1)'; });
+        document.addEventListener('drop', e => {
+            e.preventDefault();
+            dropzone.style.transform = 'scale(1)';
+            if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+        });
+
+        // Paste support
+        document.addEventListener('paste', e => {
+            const files = e.clipboardData?.files;
+            if (files?.length) handleFiles(files);
+        });
+
+        function handleFiles(files) {
+            for (const file of files) uploadFile(file);
+        }
+
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function uploadFile(file) {
+            const item = document.createElement('div');
+            item.className = 'upload-item';
+            item.innerHTML = `
+      <div class="upload-info">
+        <span class="file-name">${esc(file.name)}</span>
+        <span class="file-size">${formatSize(file.size)}</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill"></div></div>
+      <div class="result-row" style="display:none">
+        <div class="link-box"></div>
+        <button class="copy-btn">Copy</button>
+      </div>
+    `;
+            uploadArea.prepend(item);
+
+            const fill = item.querySelector('.progress-fill');
+            const resultRow = item.querySelector('.result-row');
+            const linkBox = item.querySelector('.link-box');
+            const copyBtn = item.querySelector('.copy-btn');
+
+            const fd = new FormData();
+            fd.append('file', file);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/');
+
+            xhr.upload.onprogress = e => {
+                if (e.lengthComputable) fill.style.width = Math.round(e.loaded / e.total * 100) + '%';
+            };
+
+            xhr.onload = () => {
+                if (xhr.status === 201) {
+                    const data = JSON.parse(xhr.responseText);
+                    fill.style.background = 'var(--success)';
+                    resultRow.style.display = 'flex';
+                    linkBox.textContent = data.url;
+
+                    copyBtn.onclick = () => {
+                        navigator.clipboard.writeText(data.url);
+                        copyBtn.textContent = 'Copied!';
+                        setTimeout(() => copyBtn.textContent = 'Copy', 2000);
+                    };
+                    saveToHistory(data);
+                } else {
+                    fill.style.background = 'var(--error)';
+                    const err = document.createElement('p');
+                    err.style.color = 'var(--error)';
+                    err.style.fontSize = '0.8rem';
+                    err.textContent = 'Upload failed';
+                    item.appendChild(err);
+                }
+            };
+
+            xhr.send(fd);
+        }
+
+        function esc(s) {
+            const d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+
+        function getHistory() {
+            try { return JSON.parse(localStorage.getItem('dropfile_history_v1') || '[]'); }
+            catch { return []; }
+        }
+
+        function saveToHistory(data) {
+            const history = getHistory();
+            history.unshift({ ...data, uploadedAt: new Date().toISOString() });
+            if (history.length > 20) history.length = 20;
+            localStorage.setItem('dropfile_history_v1', JSON.stringify(history));
+            renderHistory();
+        }
+
+        function clearHistory() {
+            localStorage.removeItem('dropfile_history_v1');
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const section = document.getElementById('historySection');
+            const list = document.getElementById('historyList');
+            const history = getHistory();
+
+            if (!history.length) {
+                section.style.display = 'none';
+                return;
+            }
+            section.style.display = 'block';
+            list.innerHTML = history.map(h => `
+      <div class="history-item">
+        <span class="history-icon">📄</span>
+        <div style="flex:1; min-width:0">
+          <div style="font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">
+            <a href="${esc(h.url)}" target="_blank" style="color:inherit; text-decoration:none">${esc(h.filename)}</a>
+          </div>
+          <div style="font-size:0.75rem; color:var(--muted)">${formatSize(h.size)} &middot; Exp: ${new Date(h.expires).toLocaleDateString()}</div>
+        </div>
+      </div>
+    `).join('');
+        }
+
+        renderHistory();
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dropfile // Theme Gallery</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;900&family=JetBrains+Mono:wght@400&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0c;
+            --fg: #ffffff;
+            --accent: #6366f1;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--fg);
+            font-family: 'Outfit', sans-serif;
+            padding: 4rem 2rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 5rem;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 900;
+            letter-spacing: -0.05em;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #fff, var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1.2rem;
+            font-weight: 300;
+        }
+
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 3rem;
+        }
+
+        .theme-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .theme-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(99, 102, 241, 0.2);
+        }
+
+        .preview-window {
+            height: 240px;
+            width: 100%;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+            background: #000;
+            overflow: hidden;
+        }
+
+        .preview-window iframe {
+            width: 1280px;
+            /* High res target */
+            height: 800px;
+            border: none;
+            transform: scale(0.28);
+            /* Scale down to fit card */
+            transform-origin: 0 0;
+            pointer-events: none;
+            /* Keep the card clickable */
+        }
+
+        .info {
+            padding: 1.5rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .theme-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .version-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            background: var(--accent);
+            padding: 2px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .theme-desc {
+            font-size: 0.9rem;
+            color: #777;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-view {
+            margin-top: auto;
+            background: #fff;
+            color: #000;
+            text-align: center;
+            padding: 0.8rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .btn-view:hover {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        footer {
+            margin-top: 6rem;
+            text-align: center;
+            color: #444;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 600px) {
+            .theme-grid {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Dropfile Gallery</h1>
+            <p class="subtitle">Select a design interface for your file drops.</p>
+        </header>
+
+        <div class="theme-grid">
+            <!-- V1: Vibrant -->
+            <article class="theme-card">
+                <div class="preview-window">
+                    <iframe src="/theme/v1" loading="lazy"></iframe>
+                </div>
+                <div class="info">
+                    <div class="theme-name">Vibrant Glass <span class="version-tag">v1</span></div>
+                    <p class="theme-desc">Modern glassmorphism with dynamic animated gradient blobs.</p>
+                    <a href="/theme/v1" class="btn-view">Visit Theme</a>
+                </div>
+            </article>
+
+            <!-- V2: Neon -->
+            <article class="theme-card">
+                <div class="preview-window">
+                    <iframe src="/theme/v2-neon" loading="lazy"></iframe>
+                </div>
+                <div class="info">
+                    <div class="theme-name">Neon Drive <span class="version-tag">v2</span></div>
+                    <p class="theme-desc">High-energy cyberpunk aesthetic with 3D ground grid and flicker effects.</p>
+                    <a href="/theme/v2-neon" class="btn-view">Visit Theme</a>
+                </div>
+            </article>
+
+            <!-- V3: Cartoon -->
+            <article class="theme-card">
+                <div class="preview-window">
+                    <iframe src="/theme/v3-cartoon" loading="lazy"></iframe>
+                </div>
+                <div class="info">
+                    <div class="theme-name">Cartoon Pop <span class="version-tag">v3</span></div>
+                    <p class="theme-desc">Neubrutalism style with bold borders, playful colors, and bouncy animations.
+                    </p>
+                    <a href="/theme/v3-cartoon" class="btn-view">Visit Theme</a>
+                </div>
+            </article>
+
+            <!-- V4: Retro -->
+            <article class="theme-card">
+                <div class="preview-window">
+                    <iframe src="/theme/v4-retro" loading="lazy"></iframe>
+                </div>
+                <div class="info">
+                    <div class="theme-name">Retro BIOS <span class="version-tag">v4</span></div>
+                    <p class="theme-desc">Old-school CRT terminal experience with scanlines and system logs.</p>
+                    <a href="/theme/v4-retro" class="btn-view">Visit Theme</a>
+                </div>
+            </article>
+
+            <!-- V5: Premium -->
+            <article class="theme-card">
+                <div class="preview-window">
+                    <iframe src="/theme/v5-premium" loading="lazy"></iframe>
+                </div>
+                <div class="info">
+                    <div class="theme-name">Premium Minimal <span class="version-tag">v5</span></div>
+                    <p class="theme-desc">Quiet luxury. Deep blacks, minimal nebula glows, and precision typography.</p>
+                    <a href="/theme/v5-premium" class="btn-view">Visit Theme</a>
+                </div>
+            </article>
+
+            <!-- V6: Organic -->
+            <article class="theme-card">
+                <div class="preview-window">
+                    <iframe src="/theme/v6-organic" loading="lazy"></iframe>
+                </div>
+                <div class="info">
+                    <div class="theme-name">Bio Organic <span class="version-tag">v6</span></div>
+                    <p class="theme-desc">Soft shapes and minty freshness. Nature-inspired file sprouting.</p>
+                    <a href="/theme/v6-organic" class="btn-view">Visit Theme</a>
+                </div>
+            </article>
+
+            <!-- V7: Glitch -->
+            <article class="theme-card">
+                <div class="preview-window">
+                    <iframe src="/theme/v7-glitch" loading="lazy"></iframe>
+                </div>
+                <div class="info">
+                    <div class="theme-name">Digital Glitch <span class="version-tag">v7</span></div>
+                    <p class="theme-desc">High-contrast distortion and digital noise. For the data rebels.</p>
+                    <a href="/theme/v7-glitch" class="btn-view">Visit Theme</a>
+                </div>
+            </article>
+
+            <!-- V8: 90s -->
+            <article class="theme-card">
+                <div class="preview-window">
+                    <iframe src="/theme/v8-90s" loading="lazy"></iframe>
+                </div>
+                <div class="info">
+                    <div class="theme-name">GeoCities 90s <span class="version-tag">v8</span></div>
+                    <p class="theme-desc">Nostalgic web design. Marquees, star backgrounds, and blink tags.</p>
+                    <a href="/theme/v8-90s" class="btn-view">Visit Theme</a>
+                </div>
+            </article>
+
+            <!-- V9: Brutalist -->
+            <article class="theme-card">
+                <div class="preview-window">
+                    <iframe src="/theme/v9-brutalist" loading="lazy"></iframe>
+                </div>
+                <div class="info">
+                    <div class="theme-name">Brutalist News <span class="version-tag">v9</span></div>
+                    <p class="theme-desc">Newspaper raw style. Heavy serifs and high-impact layouts.</p>
+                    <a href="/theme/v9-brutalist" class="btn-view">Visit Theme</a>
+                </div>
+            </article>
+
+            <!-- V10: Cosmic -->
+            <article class="theme-card">
+                <div class="preview-window">
+                    <iframe src="/theme/v10-cosmic" loading="lazy"></iframe>
+                </div>
+                <div class="info">
+                    <div class="theme-name">Cosmic HUD <span class="version-tag">v10</span></div>
+                    <p class="theme-desc">Deep space voyager. HUD navigation and galactic stardust backdrop.</p>
+                    <a href="/theme/v10-cosmic" class="btn-view">Visit Theme</a>
+                </div>
+            </article>
+        </div>
+
+        <footer>
+            &copy; 2026 DROPFILE.DEV // CURATED DESIGN SYSTEMS
+        </footer>
+    </div>
+
+</body>
+
+</html>

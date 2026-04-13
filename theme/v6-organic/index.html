@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dropfile // biogenesis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --soft-green: #e1f5e9;
+            --mint: #2ecc71;
+            --soil: #4b3621;
+            --petal: #ffcdd2;
+            --leaf: #1b5e20;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--soft-green);
+            font-family: 'Comfortaa', cursive;
+            color: var(--leaf);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .blob-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            filter: blur(40px);
+        }
+
+        .blob {
+            position: absolute;
+            background: var(--petal);
+            border-radius: 50%;
+            animation: pulse 10s infinite alternate cubic-bezier(0.45, 0, 0.55, 1);
+            opacity: 0.4;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1) translate(0, 0);
+                border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            }
+
+            100% {
+                transform: scale(1.5) translate(10%, 10%);
+                border-radius: 70% 30% 30% 70% / 70% 70% 30% 30%;
+            }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        h1.logo {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .drop-zone {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            border: 4px solid var(--mint);
+            border-radius: 100px;
+            padding: 6rem 2rem;
+            cursor: pointer;
+            transition: 0.4s;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+        }
+
+        .drop-zone:hover {
+            transform: scale(1.02) rotate(1deg);
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .icon {
+            font-size: 4rem;
+            display: block;
+            margin-bottom: 1rem;
+            animation: float 4s infinite ease-in-out;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-15px);
+            }
+        }
+
+        .upload-item {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 30px;
+            margin-top: 2rem;
+            border: 2px solid var(--mint);
+        }
+
+        .progress {
+            height: 15px;
+            background: #eee;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--mint), var(--leaf));
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .features {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 4rem;
+        }
+
+        .feature {
+            background: white;
+            padding: 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="blob-bg">
+        <div class="blob" style="width: 400px; height: 400px; top: -100px; left: -100px;"></div>
+        <div class="blob"
+            style="width: 300px; height: 300px; bottom: -50px; right: -50px; background: var(--mint); opacity: 0.2;">
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 class="logo">dropfile 🍃</h1>
+        <p style="margin-bottom: 3rem; opacity: 0.7;">Nature-inspired sharing. Pure. Fluid.</p>
+
+        <div class="drop-zone" onclick="document.getElementById('fileInput').click()">
+            <span class="icon">🌱</span>
+            <h2>Plant your file</h2>
+            <p>Wait for it to grow...</p>
+            <input type="file" id="fileInput" multiple style="display:none">
+        </div>
+
+        <div id="uploadArea"></div>
+
+        <div class="features">
+            <div class="feature">Biodegradable Link</div>
+            <div class="feature">Zero Trace</div>
+            <div class="feature">Edge Sunlight</div>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+
+        fileInput.addEventListener('change', () => { handleFiles(fileInput.files); fileInput.value = ''; });
+
+        function handleFiles(files) {
+            for (const file of files) uploadFile(file);
+        }
+
+        function uploadFile(file) {
+            const item = document.createElement('div');
+            item.className = 'upload-item';
+            item.innerHTML = `
+                <div style="font-weight:700">SPROUTING: ${file.name}</div>
+                <div class="progress"><div class="bar"></div></div>
+                <div class="link" style="display:none">
+                    <a href="#" target="_blank" style="color:var(--mint); font-weight:700">GET HARVEST</a>
+                </div>
+            `;
+            uploadArea.prepend(item);
+
+            const bar = item.querySelector('.bar');
+            const linkDiv = item.querySelector('.link');
+            const urlA = item.querySelector('a');
+
+            const fd = new FormData();
+            fd.append('file', file);
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/');
+            xhr.upload.onprogress = e => {
+                if (e.lengthComputable) bar.style.width = Math.round(e.loaded / e.total * 100) + '%';
+            };
+            xhr.onload = () => {
+                if (xhr.status === 201) {
+                    const data = JSON.parse(xhr.responseText);
+                    linkDiv.style.display = 'block';
+                    urlA.href = data.url;
+                }
+            };
+            xhr.send(fd);
+        }
+    </script>
+</body>
+
+</html>

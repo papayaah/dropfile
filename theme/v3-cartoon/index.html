@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dropfile 💧 POP!</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --yellow: #FFDE59;
+            --blue: #5CE1E6;
+            --pink: #FF66C4;
+            --green: #7ED957;
+            --black: #2D2D2D;
+            --white: #FFFFFF;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'  width='40' height='48' viewport='0 0 100 100' style='fill:black;font-size:24px;'><text y='50%'>🖐️</text></svg>"), auto;
+        }
+
+        body {
+            background-color: var(--yellow);
+            font-family: 'Quicksand', sans-serif;
+            color: var(--black);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            background-image: radial-gradient(var(--black) 2px, transparent 2px);
+            background-size: 30px 30px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+            flex: 1;
+        }
+
+        header {
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        h1 {
+            font-family: 'Fredoka One', cursive;
+            font-size: 4rem;
+            color: var(--white);
+            -webkit-text-stroke: 3px var(--black);
+            text-shadow: 8px 8px 0px var(--black);
+            transform: rotate(-2deg);
+            display: inline-block;
+            transition: 0.3s;
+        }
+
+        h1:hover {
+            transform: rotate(2deg) scale(1.1);
+        }
+
+        .tagline {
+            background: var(--pink);
+            color: var(--white);
+            padding: 10px 20px;
+            display: inline-block;
+            font-weight: 700;
+            border: 4px solid var(--black);
+            box-shadow: 6px 6px 0px var(--black);
+            margin-top: 20px;
+            border-radius: 12px;
+        }
+
+        /* Fun Dropzone */
+        .cartoon-drop {
+            background: var(--white);
+            border: 6px solid var(--black);
+            border-radius: 24px;
+            padding: 60px 40px;
+            text-align: center;
+            box-shadow: 12px 12px 0px var(--black);
+            margin: 40px 0;
+            transition: 0.2s;
+            position: relative;
+        }
+
+        .cartoon-drop:active {
+            transform: translate(4px, 4px);
+            box-shadow: 8px 8px 0px var(--black);
+        }
+
+        .drop-icon {
+            font-size: 5rem;
+            display: block;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+
+        .drop-text {
+            font-family: 'Fredoka One', cursive;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        /* Features */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .card {
+            background: var(--blue);
+            border: 4px solid var(--black);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 6px 6px 0px var(--black);
+        }
+
+        .card:nth-child(2) {
+            background: var(--green);
+        }
+
+        .card:nth-child(3) {
+            background: var(--pink);
+        }
+
+        .card h3 {
+            font-family: 'Fredoka One', cursive;
+            margin-bottom: 10px;
+        }
+
+        /* Uploading State */
+        .upload-item {
+            background: var(--white);
+            border: 4px solid var(--black);
+            margin-bottom: 20px;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 6px 6px 0px var(--black);
+        }
+
+        .progress-bar-bg {
+            height: 30px;
+            background: var(--black);
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 15px 0;
+            border: 3px solid var(--black);
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--green);
+            width: 0%;
+            transition: width 0.3s;
+            background-image: linear-gradient(45deg, rgba(255, 255, 255, .2) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, .2) 50%, rgba(255, 255, 255, .2) 75%, transparent 75%, transparent);
+            background-size: 40px 40px;
+            animation: move-stripes 1s linear infinite;
+        }
+
+        @keyframes move-stripes {
+            from {
+                background-position: 0 0;
+            }
+
+            to {
+                background-position: 40px 0;
+            }
+        }
+
+        .btn-copy {
+            background: var(--yellow);
+            border: 4px solid var(--black);
+            padding: 10px 20px;
+            font-weight: 700;
+            font-family: 'Fredoka One', cursive;
+            border-radius: 12px;
+            box-shadow: 4px 4px 0px var(--black);
+            cursor: pointer;
+            transition: 0.1s;
+        }
+
+        .btn-copy:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px var(--black);
+        }
+
+        footer {
+            text-align: center;
+            font-weight: 800;
+            margin-top: 60px;
+            padding-bottom: 40px;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>DROPFILE!</h1>
+            <br>
+            <p class="tagline">SHARING IS COOL! 💧 ✨</p>
+        </header>
+
+        <div class="cartoon-drop" id="dropzone" onclick="document.getElementById('fileInput').click()">
+            <span class="drop-icon">📦</span>
+            <div class="drop-text">DROP IT HERE!</div>
+            <p>OR JUST CLICK ME!</p>
+            <input type="file" id="fileInput" multiple style="display:none">
+        </div>
+
+        <div id="uploadArea"></div>
+
+        <section class="features">
+            <div class="card">
+                <h3>SUPER FAST!</h3>
+                <p>AS FAST AS A ROCKET! 🚀</p>
+            </div>
+            <div class="card">
+                <h3>NO LOGS!</h3>
+                <p>WE DON'T DO STALKING! 🕵️</p>
+            </div>
+            <div class="card">
+                <h3>BYE BYE!</h3>
+                <p>FILES GO POOF IN 7 DAYS! 💨</p>
+            </div>
+        </section>
+
+        <footer>
+            MADE WITH ❤️ AND PIZZA 🍕 // 2026
+        </footer>
+    </div>
+
+    <script>
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+
+        fileInput.addEventListener('change', () => { handleFiles(fileInput.files); fileInput.value = ''; });
+
+        function handleFiles(files) {
+            for (const file of files) uploadFile(file);
+        }
+
+        function uploadFile(file) {
+            const item = document.createElement('div');
+            item.className = 'upload-item';
+            item.innerHTML = `
+            <div style="font-weight:800;font-size:1.2rem">${file.name.toUpperCase()}</div>
+            <div class="progress-bar-bg"><div class="progress-bar-fill"></div></div>
+            <div class="link-info" style="display:none;align-items:center;gap:10px">
+                <span class="url" style="background:#eee;padding:10px;border-radius:10px;flex:1;font-weight:700"></span>
+                <button class="btn-copy">COPY!</button>
+            </div>
+        `;
+            uploadArea.prepend(item);
+
+            const bar = item.querySelector('.progress-bar-fill');
+            const linkInfo = item.querySelector('.link-info');
+            const urlSpan = item.querySelector('.url');
+            const copyBtn = item.querySelector('.btn-copy');
+
+            const fd = new FormData();
+            fd.append('file', file);
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/');
+
+            xhr.upload.onprogress = e => {
+                if (e.lengthComputable) bar.style.width = Math.round(e.loaded / e.total * 100) + '%';
+            };
+
+            xhr.onload = () => {
+                if (xhr.status === 201) {
+                    const data = JSON.parse(xhr.responseText);
+                    bar.style.background = '#7ED957';
+                    linkInfo.style.display = 'flex';
+                    urlSpan.textContent = data.url;
+                    copyBtn.onclick = () => {
+                        navigator.clipboard.writeText(data.url);
+                        copyBtn.textContent = 'COPIED!';
+                        setTimeout(() => copyBtn.textContent = 'COPY!', 2000);
+                    };
+                } else {
+                    bar.style.background = '#FF66C4';
+                }
+            };
+            xhr.send(fd);
+        }
+    </script>
+
+</body>
+
+</html>

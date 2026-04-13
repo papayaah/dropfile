@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>~ Welcome to Dropfile Web Home ~</title>
+    <style>
+        body {
+            background-color: #000080;
+            background-image: url("https://web.archive.org/web/20090830022421im_/http://geocities.com/Athens/Olympus/6990/star_bg.gif");
+            color: #ffff00;
+            font-family: "Comic Sans MS", "Comic Sans", cursive;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            border: 5px ridge #ff0000;
+            background: #ffffff;
+            color: #000000;
+            padding: 30px;
+        }
+
+        marquee {
+            background: #ff0000;
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin: 20px 0;
+        }
+
+        .logo-img {
+            width: 200px;
+            animation: spin 3s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .drop-box {
+            border: 3px dashed #0000ff;
+            background: #ffffcc;
+            padding: 40px;
+            cursor: move;
+        }
+
+        .hit-counter {
+            font-family: "Courier New", monospace;
+            background: black;
+            color: red;
+            padding: 5px;
+            font-size: 1.5rem;
+            border: 2px solid grey;
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        .nav-table {
+            width: 100%;
+            margin-bottom: 20px;
+            border: 2px solid black;
+        }
+
+        .nav-table td {
+            border: 1px solid black;
+            padding: 5px;
+            background: #cccccc;
+        }
+
+        #uploadArea {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .blink {
+            animation: blinker 1s linear infinite;
+        }
+
+        @keyframes blinker {
+            50% {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <table class="nav-table">
+            <tr>
+                <td>HOME</td>
+                <td><a href="#">GUESTBOOK</a></td>
+                <td><a href="#">WEB-RING</a></td>
+                <td><a href="#">E-MAIL ME</a></td>
+            </tr>
+        </table>
+
+        <h1>
+            <font color="red">Welcome to My File Service!</font>
+        </h1>
+        <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3N6M3M3M3M3M3M3M3M3M3M3M3M3M3M3M3M3M3M3M3M3JmX2lkPTY/3o7TKQH37398z6k1W0/giphy.gif"
+            alt="cool gif" width="100">
+        <br>
+        <marquee>Best viewed in Netscape Navigator 4.0 at 800x600 resolution!</marquee>
+
+        <div class="drop-box" id="dropzone" onclick="document.getElementById('fileInput').click()">
+            <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3N6M3M3M3M3M3M3M3M3M3M3M3M3M3M3M3M3M3M3M3M3JmX2lkPTY/VseX2pAFKyK8GOnO+O/giphy.gif"
+                width="50"><br>
+            <b class="blink">CLICK HERE TO UPLOAD A FILE!!!</b><br>
+            <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM3N6M3M3M3M3M3M3M3M3M3M3M3M3M3M3M3M3M3M3M3M3JmX2lkPTY/VseX2pAFKyK8GOnO+O/giphy.gif"
+                width="50">
+            <input type="file" id="fileInput" multiple style="display:none">
+        </div>
+
+        <div id="uploadArea"></div>
+
+        <p>This page is <img
+                src="https://web.archive.org/web/20090830022421im_/http://geocities.com/Athens/Olympus/6990/undercon.gif"
+                width="100"></p>
+
+        <div class="hit-counter">
+            000042
+        </div>
+        <p>You are visitor #42!</p>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+
+        fileInput.addEventListener('change', () => { handleFiles(fileInput.files); fileInput.value = ''; });
+
+        function handleFiles(files) {
+            for (const file of files) uploadFile(file);
+        }
+
+        function uploadFile(file) {
+            const item = document.createElement('div');
+            item.innerHTML = `
+                <hr>
+                <b>File:</b> ${file.name}<br>
+                <b>Status:</b> <span class="status">SENDING...</span>
+                <div style="border: 2px solid black; width: 100%; height: 20px;">
+                    <div class="bar" style="background: blue; width: 0%; height: 100%;"></div>
+                </div>
+                <div class="link" style="display:none">
+                    <b>LINK:</b> <a href="#" target="_blank">CLICK HERE TO DOWNLOAD!</a>
+                </div>
+            `;
+            uploadArea.prepend(item);
+
+            const bar = item.querySelector('.bar');
+            const status = item.querySelector('.status');
+            const linkDiv = item.querySelector('.link');
+            const urlA = item.querySelector('a');
+
+            const fd = new FormData();
+            fd.append('file', file);
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/');
+            xhr.upload.onprogress = e => {
+                if (e.lengthComputable) bar.style.width = Math.round(e.loaded / e.total * 100) + '%';
+            };
+            xhr.onload = () => {
+                if (xhr.status === 201) {
+                    const data = JSON.parse(xhr.responseText);
+                    status.innerHTML = "<font color='green'>SUCCESS!!!</font>";
+                    linkDiv.style.display = 'block';
+                    urlA.href = data.url;
+                }
+            };
+            xhr.send(fd);
+        }
+    </script>
+</body>
+
+</html>
