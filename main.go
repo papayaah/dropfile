@@ -63,7 +63,6 @@ func (rl *rateLimiter) allow(ip string) bool {
 	return true
 }
 
-// Periodic cleanup of stale IPs from the rate limiter map.
 func (rl *rateLimiter) cleanup() {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
@@ -102,18 +101,42 @@ type FileMeta struct {
 	UserAgent  string    `json:"user_agent,omitempty"`
 }
 
+type SyncEvent struct {
+	Type string `json:"type"` // "file" or "text"
+	Data any    `json:"data"`
+}
+
+// Global state for live sync
+var (
+	clients   = make(map[string]map[chan SyncEvent]bool) // ip -> map of client channels
+	clientsMu sync.Mutex
+)
+
 //go:embed index.html
 var indexHTML []byte
 
 var (
-	cfg          Config
-	absUploadDir string
+	cfg           Config
+	absUploadDir  string
 	uploadLimiter *rateLimiter
 )
 
 const maxStoragePerIP = 500 * 1024 * 1024 // 500MB per IP
 
-// storageUsedByIP scans the upload directory and sums file sizes for a given IP.
+func broadcast(ip string, event SyncEvent) {
+	clientsMu.Lock()
+	defer clientsMu.Unlock()
+	if list, ok := clients[ip]; ok {
+		for ch := range list {
+			select {
+			case ch <- event:
+			default:
+				// If client is slow/blocked, skip
+			}
+		}
+	}
+}
+
 func storageUsedByIP(ip string) int64 {
 	entries, err := os.ReadDir(cfg.UploadDir)
 	if err != nil {
@@ -135,7 +158,6 @@ func storageUsedByIP(ip string) int64 {
 	return total
 }
 
-// checkUploadAllowed validates rate limit and per-IP storage. Returns error string or empty.
 func checkUploadAllowed(ip string) string {
 	if !uploadLimiter.allow(ip) {
 		return "Rate limit exceeded. Try again in a minute.\n"
@@ -153,9 +175,8 @@ func loadConfig() Config {
 		MaxFileSize:     envOrInt64("MAX_FILE_SIZE", 100*1024*1024), // 100MB
 		DefaultExpiry:   envOrDuration("DEFAULT_EXPIRY", 168*time.Hour),
 		CleanupInterval: envOrDuration("CLEANUP_INTERVAL", 1*time.Hour),
-		BaseURL:         envOr("BASE_URL", "https://dropfile.dev"),
+		BaseURL:         envOr("BASE_URL", "http://localhost:8080"), // Default for dev
 	}
-	// Strip trailing slash from BaseURL
 	c.BaseURL = strings.TrimRight(c.BaseURL, "/")
 	return c
 }
@@ -187,7 +208,6 @@ func envOrDuration(key string, fallback time.Duration) time.Duration {
 	return fallback
 }
 
-// generateID creates a random URL-safe string of the given length.
 func generateID(length int) (string, error) {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	b := make([]byte, length)
@@ -201,7 +221,6 @@ func generateID(length int) (string, error) {
 	return string(b), nil
 }
 
-// getClientIP extracts the real client IP, preferring Cloudflare > nginx > direct.
 func getClientIP(r *http.Request) string {
 	if ip := r.Header.Get("CF-Connecting-IP"); ip != "" {
 		return ip
@@ -210,13 +229,11 @@ func getClientIP(r *http.Request) string {
 		return ip
 	}
 	if fwd := r.Header.Get("X-Forwarded-For"); fwd != "" {
-		// First IP in the chain is the client
 		if i := strings.IndexByte(fwd, ','); i > 0 {
 			return strings.TrimSpace(fwd[:i])
 		}
 		return strings.TrimSpace(fwd)
 	}
-	// Fallback: strip port from RemoteAddr
 	addr := r.RemoteAddr
 	if i := strings.LastIndex(addr, ":"); i > 0 {
 		return addr[:i]
@@ -359,7 +376,7 @@ func handlePostUpload(w http.ResponseWriter, r *http.Request) {
 		Size:       n,
 		UploadedAt: now,
 		ExpiresAt:  now.Add(cfg.DefaultExpiry),
-		UploaderIP: getClientIP(r),
+		UploaderIP: ip,
 		Country:    r.Header.Get("CF-IPCountry"),
 		UserAgent:  r.UserAgent(),
 	}
@@ -371,14 +388,19 @@ func handlePostUpload(w http.ResponseWriter, r *http.Request) {
 
 	downloadURL := fmt.Sprintf("%s/%s/%s", cfg.BaseURL, id, filename)
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]any{
+	resp := map[string]any{
 		"url":      downloadURL,
 		"filename": filename,
 		"size":     n,
 		"expires":  meta.ExpiresAt.Format(time.RFC3339),
-	})
+	}
+
+	// Broadcast upload
+	broadcast(ip, SyncEvent{Type: "file", Data: resp})
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(resp)
 }
 
 func handleUpload(w http.ResponseWriter, r *http.Request) {
@@ -435,7 +457,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 		Size:       n,
 		UploadedAt: now,
 		ExpiresAt:  now.Add(cfg.DefaultExpiry),
-		UploaderIP: getClientIP(r),
+		UploaderIP: ip,
 		Country:    r.Header.Get("CF-IPCountry"),
 		UserAgent:  r.UserAgent(),
 	}
@@ -446,17 +468,24 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	downloadURL := fmt.Sprintf("%s/%s/%s", cfg.BaseURL, id, filename)
-	country := meta.Country
-	if country == "" {
-		country = "unknown"
-	}
+
+	// Broadcast upload
+	broadcast(ip, SyncEvent{
+		Type: "file",
+		Data: map[string]any{
+			"url":      downloadURL,
+			"filename": filename,
+			"size":     n,
+			"expires":  meta.ExpiresAt.Format(time.RFC3339),
+		},
+	})
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
 	fmt.Fprintf(w, "\n  file: %s\n  size: %s\n  from: %s\n  expires: %s\n  url: %s\n\n",
 		filename,
 		formatBytes(n),
-		country,
+		meta.Country,
 		meta.ExpiresAt.Format("2006-01-02 15:04 UTC"),
 		downloadURL,
 	)
@@ -471,7 +500,6 @@ func handleDownload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate id contains only safe characters
 	for _, c := range id {
 		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
 			http.Error(w, "Not found\n", http.StatusNotFound)
@@ -508,6 +536,88 @@ func handleDownload(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filePath)
 }
 
+func handleEvents(w http.ResponseWriter, r *http.Request) {
+	ip := getClientIP(r)
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	ch := make(chan SyncEvent, 10)
+
+	clientsMu.Lock()
+	if clients[ip] == nil {
+		clients[ip] = make(map[chan SyncEvent]bool)
+	}
+	clients[ip][ch] = true
+	clientsMu.Unlock()
+
+	defer func() {
+		clientsMu.Lock()
+		delete(clients[ip], ch)
+		if len(clients[ip]) == 0 {
+			delete(clients, ip)
+		}
+		clientsMu.Unlock()
+	}()
+
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "Streaming unsupported", http.StatusInternalServerError)
+		return
+	}
+
+	// Send initial heartbeat
+	fmt.Fprintf(w, "event: connected\ndata: {\"status\":\"ok\"}\n\n")
+	flusher.Flush()
+
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case event := <-ch:
+			data, _ := json.Marshal(event)
+			fmt.Fprintf(w, "event: sync\ndata: %s\n\n", data)
+			flusher.Flush()
+		case <-ticker.C:
+			fmt.Fprintf(w, "event: heartbeat\ndata: {}\n\n")
+			flusher.Flush()
+		case <-r.Context().Done():
+			return
+		}
+	}
+}
+
+func handleClipboard(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	ip := getClientIP(r)
+	var req struct {
+		Text string `json:"text"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	if len(req.Text) > 100*1024 { // 100KB limit for text sync
+		http.Error(w, "Text too large", http.StatusRequestEntityTooLarge)
+		return
+	}
+
+	broadcast(ip, SyncEvent{
+		Type: "text",
+		Data: req.Text,
+	})
+
+	w.WriteHeader(http.StatusOK)
+}
+
 func startCleanup(ctx context.Context) {
 	ticker := time.NewTicker(cfg.CleanupInterval)
 	defer ticker.Stop()
@@ -539,13 +649,11 @@ func cleanExpiredUploads() {
 		if err != nil {
 			info, _ := entry.Info()
 			if info != nil && now.Sub(info.ModTime()) > 2*cfg.DefaultExpiry {
-				log.Printf("cleanup: removing orphaned dir %s", entry.Name())
 				os.RemoveAll(dirPath)
 			}
 			continue
 		}
 		if now.After(meta.ExpiresAt) {
-			log.Printf("cleanup: removing expired upload %s (%s)", entry.Name(), meta.Filename)
 			os.RemoveAll(dirPath)
 		}
 	}
@@ -564,14 +672,12 @@ func main() {
 		log.Fatalf("Failed to resolve upload directory: %v", err)
 	}
 
-	// 20 uploads per minute per IP
 	uploadLimiter = newRateLimiter(20, 1*time.Minute)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	go startCleanup(ctx)
 
-	// Periodically clean stale entries from the rate limiter
 	go func() {
 		ticker := time.NewTicker(5 * time.Minute)
 		defer ticker.Stop()
@@ -587,6 +693,8 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{$}", handleIndex)
+	mux.HandleFunc("GET /events", handleEvents)
+	mux.HandleFunc("POST /clipboard", handleClipboard)
 	mux.HandleFunc("GET /{id}/{filename}", handleDownload)
 	mux.HandleFunc("PUT /{filename}", handleUpload)
 	mux.HandleFunc("POST /{$}", handlePostUpload)
