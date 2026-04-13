@@ -587,6 +587,45 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{$}", handleIndex)
+	mux.HandleFunc("GET /theme/{$}", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "theme/index.html")
+	})
+	mux.HandleFunc("GET /theme/v1", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "theme/v1/index.html")
+	})
+	mux.HandleFunc("GET /theme/v2-neon", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "theme/v2-neon/index.html")
+	})
+	mux.HandleFunc("GET /theme/v3-cartoon", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "theme/v3-cartoon/index.html")
+	})
+	mux.HandleFunc("GET /theme/v4-retro", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "theme/v4-retro/index.html")
+	})
+	mux.HandleFunc("GET /theme/v5-premium", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "theme/v5-premium/index.html")
+	})
+	mux.HandleFunc("GET /theme/v6-organic", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "theme/v6-organic/index.html")
+	})
+	mux.HandleFunc("GET /theme/v7-glitch", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "theme/v7-glitch/index.html")
+	})
+	mux.HandleFunc("GET /theme/v8-90s", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "theme/v8-90s/index.html")
+	})
+	mux.HandleFunc("GET /theme/v9-brutalist", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "theme/v9-brutalist/index.html")
+	})
+	mux.HandleFunc("GET /theme/v10-cosmic", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "theme/v10-cosmic/index.html")
+	})
+	mux.HandleFunc("GET /robots.txt", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "robots.txt")
+	})
+	mux.HandleFunc("GET /og-image.png", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "og-image.png")
+	})
 	mux.HandleFunc("GET /{id}/{filename}", handleDownload)
 	mux.HandleFunc("PUT /{filename}", handleUpload)
 	mux.HandleFunc("POST /{$}", handlePostUpload)
