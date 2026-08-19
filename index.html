@@ -137,14 +137,22 @@
   .drag-overlay.active{display:flex}
   .drag-overlay-text{background:var(--surface);padding:2rem 4rem;border-radius:20px;font-size:1.5rem;font-weight:700;color:var(--accent);box-shadow:0 20px 40px rgba(0,0,0,0.2)}
 
+  /* Features Grid */
+  .features-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-top:2.5rem}
+  @media(max-width:640px){.features-grid{grid-template-columns:1fr}}
+  .feature-item{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem;box-shadow:0 2px 6px rgba(0,0,0,0.02);transition:all .2s}
+  .feature-item:hover{border-color:var(--accent);transform:translateY(-1px)}
+  .feature-item h4{font-size:.9rem;font-weight:700;margin-bottom:.4rem;color:var(--text)}
+  .feature-item p{font-size:.85rem;color:var(--muted);line-height:1.5}
+
   footer{text-align:center;padding:4rem 1.5rem;color:var(--muted);font-size:.85rem;opacity:0.6}
+  footer .sep{margin:0 .4rem;opacity:.4}
   
   /* Upload Progress */
   .upload-area{margin-top:1.5rem}
   .upload-progress-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.75rem}
   .progress-bg{height:6px;background:var(--border);border-radius:3px;margin-top:.75rem;overflow:hidden}
   .progress-fill{height:100%;background:var(--accent);width:0%;transition:width .1s}
-
 </style>
 </head>
 <body>
@@ -220,8 +228,34 @@
     </div>
   </div>
 
+  <!-- 5. Features Grid Section -->
+  <section class="features-grid">
+    <div class="feature-item">
+      <h4>Anonymous & Private</h4>
+      <p>No accounts or tracking. Just your files, shared securely.</p>
+    </div>
+    <div class="feature-item">
+      <h4>Terminal-First</h4>
+      <p>Upload directly from your CLI with a simple curl command.</p>
+    </div>
+    <div class="feature-item">
+      <h4>Instant Delivery</h4>
+      <p>Get a shareable link immediately after upload completes.</p>
+    </div>
+    <div class="feature-item">
+      <h4>Auto-Expiry</h4>
+      <p>Files are automatically deleted after 7 days for your peace of mind.</p>
+    </div>
+  </section>
+
   <footer>
-    Files expire after 7 days &middot; End-to-end (sorta) &middot; dropfile.dev
+    dropfile.dev
+    <span class="sep">|</span>
+    max 100 MB
+    <span class="sep">|</span>
+    files expire after 7 days
+    <span class="sep">|</span>
+    no account needed
   </footer>
 </div>
 
