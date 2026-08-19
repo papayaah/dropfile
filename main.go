@@ -102,8 +102,101 @@ type FileMeta struct {
 }
 
 type SyncEvent struct {
-	Type string `json:"type"` // "file" or "text"
+	Type string `json:"type"` // "file", "text", or "stats"
 	Data any    `json:"data"`
+}
+
+type LiveStats struct {
+	ConnectedDevices int    `json:"connected_devices"`
+	ActiveFiles      int    `json:"active_files"`
+	TotalStorage     int64  `json:"total_storage"`
+	FormattedStorage string `json:"formatted_storage"`
+	TotalUploads     int64  `json:"total_uploads"`
+	TotalClips       int64  `json:"total_clips"`
+	TotalUniqueIPs   int    `json:"total_unique_ips"`
+}
+
+type StatsFile struct {
+	TotalUploads int64               `json:"total_uploads"`
+	TotalClips   int64               `json:"total_clips"`
+	UniqueIPs    map[string]struct{} `json:"unique_ips"`
+}
+
+var (
+	statsMu        sync.Mutex
+	statsData      StatsFile
+	statsFileLoaded bool
+)
+
+func loadStats() {
+	statsMu.Lock()
+	defer statsMu.Unlock()
+
+	statsData.UniqueIPs = make(map[string]struct{})
+	filePath := filepath.Join(cfg.UploadDir, "stats.json")
+	data, err := os.ReadFile(filePath)
+	if err == nil {
+		json.Unmarshal(data, &statsData)
+	}
+	if statsData.UniqueIPs == nil {
+		statsData.UniqueIPs = make(map[string]struct{})
+	}
+
+	// Seed initial TotalUploads from existing active directories if stats.json is new
+	if statsData.TotalUploads == 0 {
+		entries, err := os.ReadDir(cfg.UploadDir)
+		if err == nil {
+			var count int64
+			for _, entry := range entries {
+				if entry.IsDir() {
+					count++
+				}
+			}
+			statsData.TotalUploads = count
+		}
+	}
+
+	statsFileLoaded = true
+	saveStatsLocked()
+}
+
+func saveStatsLocked() {
+	filePath := filepath.Join(cfg.UploadDir, "stats.json")
+	data, err := json.MarshalIndent(statsData, "", "  ")
+	if err == nil {
+		os.WriteFile(filePath, data, 0644)
+	}
+}
+
+func recordIP(ip string) {
+	if ip == "" {
+		return
+	}
+	statsMu.Lock()
+	defer statsMu.Unlock()
+	if !statsFileLoaded {
+		return
+	}
+	if _, exists := statsData.UniqueIPs[ip]; !exists {
+		statsData.UniqueIPs[ip] = struct{}{}
+		saveStatsLocked()
+	}
+}
+
+func recordUpload(ip string) {
+	recordIP(ip)
+	statsMu.Lock()
+	statsData.TotalUploads++
+	saveStatsLocked()
+	statsMu.Unlock()
+}
+
+func recordClip(ip string) {
+	recordIP(ip)
+	statsMu.Lock()
+	statsData.TotalClips++
+	saveStatsLocked()
+	statsMu.Unlock()
 }
 
 // Global state for live sync
@@ -122,6 +215,70 @@ var (
 )
 
 const maxStoragePerIP = 500 * 1024 * 1024 // 500MB per IP
+
+func getLiveStats() LiveStats {
+	clientsMu.Lock()
+	devices := 0
+	for _, chMap := range clients {
+		devices += len(chMap)
+	}
+	clientsMu.Unlock()
+
+	entries, err := os.ReadDir(cfg.UploadDir)
+	var activeFiles int
+	var totalStorage int64
+	now := time.Now()
+	if err == nil {
+		for _, entry := range entries {
+			if !entry.IsDir() {
+				continue
+			}
+			meta, err := readMeta(filepath.Join(cfg.UploadDir, entry.Name()))
+			if err != nil {
+				continue
+			}
+			if now.Before(meta.ExpiresAt) {
+				activeFiles++
+				totalStorage += meta.Size
+			}
+		}
+	}
+
+	statsMu.Lock()
+	uploads := statsData.TotalUploads
+	clips := statsData.TotalClips
+	uniqueIPs := len(statsData.UniqueIPs)
+	statsMu.Unlock()
+
+	return LiveStats{
+		ConnectedDevices: devices,
+		ActiveFiles:      activeFiles,
+		TotalStorage:     totalStorage,
+		FormattedStorage: formatBytes(totalStorage),
+		TotalUploads:     uploads,
+		TotalClips:       clips,
+		TotalUniqueIPs:   uniqueIPs,
+	}
+}
+
+func broadcastGlobalStats() {
+	stats := getLiveStats()
+	event := SyncEvent{
+		Type: "stats",
+		Data: stats,
+	}
+
+	clientsMu.Lock()
+	defer clientsMu.Unlock()
+	for _, list := range clients {
+		for ch := range list {
+			select {
+			case ch <- event:
+			default:
+			}
+		}
+	}
+}
 
 func broadcast(ip string, event SyncEvent) {
 	clientsMu.Lock()
@@ -397,6 +554,8 @@ func handlePostUpload(w http.ResponseWriter, r *http.Request) {
 
 	// Broadcast upload
 	broadcast(ip, SyncEvent{Type: "file", Data: resp})
+	recordUpload(ip)
+	go broadcastGlobalStats()
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -479,6 +638,8 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 			"expires":  meta.ExpiresAt.Format(time.RFC3339),
 		},
 	})
+	recordUpload(ip)
+	go broadcastGlobalStats()
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
@@ -533,6 +694,8 @@ func handleDownload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Content-Security-Policy", "default-src 'none'; sandbox")
 	http.ServeFile(w, r, filePath)
 }
 
@@ -553,6 +716,9 @@ func handleEvents(w http.ResponseWriter, r *http.Request) {
 	clients[ip][ch] = true
 	clientsMu.Unlock()
 
+	recordIP(ip)
+	go broadcastGlobalStats()
+
 	defer func() {
 		clientsMu.Lock()
 		delete(clients[ip], ch)
@@ -560,6 +726,7 @@ func handleEvents(w http.ResponseWriter, r *http.Request) {
 			delete(clients, ip)
 		}
 		clientsMu.Unlock()
+		go broadcastGlobalStats()
 	}()
 
 	flusher, ok := w.(http.Flusher)
@@ -614,6 +781,8 @@ func handleClipboard(w http.ResponseWriter, r *http.Request) {
 		Type: "text",
 		Data: req.Text,
 	})
+	recordClip(ip)
+	go broadcastGlobalStats()
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -657,6 +826,7 @@ func cleanExpiredUploads() {
 			os.RemoveAll(dirPath)
 		}
 	}
+	go broadcastGlobalStats()
 }
 
 func main() {
@@ -671,6 +841,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to resolve upload directory: %v", err)
 	}
+
+	loadStats()
 
 	uploadLimiter = newRateLimiter(20, 1*time.Minute)
 
