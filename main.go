@@ -208,6 +208,15 @@ var (
 //go:embed index.html
 var indexHTML []byte
 
+//go:embed screenshot.png
+var screenshotPNG []byte
+
+//go:embed og-image.png
+var ogImagePNG []byte
+
+//go:embed robots.txt
+var robotsTXT []byte
+
 var (
 	cfg           Config
 	absUploadDir  string
@@ -901,10 +910,18 @@ func main() {
 		http.ServeFile(w, r, "theme/v10-cosmic/index.html")
 	})
 	mux.HandleFunc("GET /robots.txt", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "robots.txt")
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.Write(robotsTXT)
 	})
 	mux.HandleFunc("GET /og-image.png", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "og-image.png")
+		w.Header().Set("Content-Type", "image/png")
+		w.Header().Set("Cache-Control", "public, max-age=86400")
+		w.Write(ogImagePNG)
+	})
+	mux.HandleFunc("GET /screenshot.png", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "image/png")
+		w.Header().Set("Cache-Control", "public, max-age=86400")
+		w.Write(screenshotPNG)
 	})
 	mux.HandleFunc("GET /{id}/{filename}", handleDownload)
 	mux.HandleFunc("PUT /{filename}", handleUpload)
