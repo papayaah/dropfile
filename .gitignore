@@ -1,12 +1,19 @@
 # Environments
 .env
+engage/.env
+engage/.env.local
 
 # Binary
 dropfile
 dropfile_linux
 
-# Docker (not used)
-Dockerfile
+# Runtime data
+uploads/
+
+# Node / sidecar / widget build
+node_modules/
+.next/
+engage/next-env.d.ts
 
 # OS
 .DS_Store

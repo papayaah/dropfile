@@ -1,0 +1,19 @@
+{
+  "name": "dropfile-engage-widget",
+  "private": true,
+  "type": "module",
+  "description": "Bundles @reactkits.dev/react-engage's EngageWidget into a single static JS/CSS pair that dropfile's Go server embeds and serves.",
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch"
+  },
+  "dependencies": {
+    "@reactkits.dev/react-engage": "file:../../tradingdiary/packages/react-engage",
+    "lucide-react": "^0.563.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
+}

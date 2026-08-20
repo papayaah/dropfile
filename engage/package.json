@@ -1,0 +1,26 @@
+{
+  "name": "dropfile-engage",
+  "private": true,
+  "description": "Dedicated Next.js sidecar hosting react-engage's /api/engage route against dropfile's own Postgres. dropfile's Go server reverse-proxies to it.",
+  "scripts": {
+    "dev": "next dev -p 3001",
+    "build": "next build",
+    "start": "next start -p 3001",
+    "db:push": "drizzle-kit push"
+  },
+  "dependencies": {
+    "@reactkits.dev/react-engage": "^0.2.0",
+    "drizzle-orm": "^0.45.1",
+    "next": "16.1.6",
+    "postgres": "^3.4.8",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.9",
+    "typescript": "^5"
+  }
+}

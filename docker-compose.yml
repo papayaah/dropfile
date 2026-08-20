@@ -1,0 +1,45 @@
+# Engage backend for dropfile: Postgres + the react-engage Next.js sidecar.
+# The Go server (host process) reverse-proxies /api/engage -> 127.0.0.1:3001.
+services:
+  engage-db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: dropfile_engage
+    volumes:
+      - engage-pgdata:/var/lib/postgresql/data
+    # No host port: only the sidecar talks to Postgres, and it does so over the
+    # internal compose network (engage-db:5432). For host-side psql/debugging
+    # use `docker compose exec engage-db psql -U postgres dropfile_engage`.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d dropfile_engage"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  engage:
+    build: ./engage
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@engage-db:5432/dropfile_engage
+      # Must match the Go server's ENGAGE_ADMIN_SECRET so the admin cookie the Go
+      # server sets is accepted here. Unset = admin endpoints stay locked (403).
+      ENGAGE_ADMIN_SECRET: ${ENGAGE_ADMIN_SECRET:-}
+      # Optional email (Brevo). Unset = submissions still persist, just no email.
+      ENGAGE_API_KEY: ${ENGAGE_API_KEY:-}
+      ENGAGE_ADMIN_EMAIL: ${ENGAGE_ADMIN_EMAIL:-}
+      ENGAGE_FROM_EMAIL: ${ENGAGE_FROM_EMAIL:-}
+      ENGAGE_FROM_NAME: ${ENGAGE_FROM_NAME:-}
+    depends_on:
+      engage-db:
+        condition: service_healthy
+    ports:
+      # The only published port. Bound to loopback so the *native* Go server
+      # (systemd, not a container) can reach the sidecar; never public. Fixed at
+      # 3001 since this host is dedicated to dropfile.
+      - "127.0.0.1:3001:3001"
+
+volumes:
+  engage-pgdata:

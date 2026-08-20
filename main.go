@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/rand"
+	"crypto/subtle"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,6 +11,8 @@ import (
 	"log"
 	"math/big"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -91,6 +94,10 @@ type Config struct {
 	DefaultExpiry    time.Duration
 	CleanupInterval  time.Duration
 	BaseURL          string
+	EngageUpstream   string
+	AdminUser        string
+	AdminPass        string
+	AdminSecret      string
 }
 
 type FileMeta struct {
@@ -226,6 +233,24 @@ var ogImagePNG []byte
 
 //go:embed robots.txt
 var robotsTXT []byte
+
+// Prebuilt react-engage widget bundle (see widget/). Rebuild with
+// `cd widget && npm run build` after editing react-engage.
+//
+//go:embed assets/engage.js
+var engageJS []byte
+
+//go:embed assets/engage.css
+var engageCSS []byte
+
+//go:embed assets/engage-admin.js
+var engageAdminJS []byte
+
+//go:embed assets/engage-admin.css
+var engageAdminCSS []byte
+
+//go:embed assets/admin.html
+var adminHTML []byte
 
 var (
 	cfg           Config
@@ -411,6 +436,10 @@ func loadConfig() Config {
 		DefaultExpiry:    envOrDuration("DEFAULT_EXPIRY", 168*time.Hour),
 		CleanupInterval:  envOrDuration("CLEANUP_INTERVAL", 1*time.Hour),
 		BaseURL:          envOr("BASE_URL", "http://localhost:8080"), // Default for dev
+		EngageUpstream:   envOr("ENGAGE_UPSTREAM", "http://127.0.0.1:3001"),
+		AdminUser:        os.Getenv("ADMIN_USER"),
+		AdminPass:        os.Getenv("ADMIN_PASS"),
+		AdminSecret:      os.Getenv("ENGAGE_ADMIN_SECRET"),
 	}
 	c.BaseURL = strings.TrimRight(c.BaseURL, "/")
 	return c
@@ -528,6 +557,56 @@ func formatBytes(b int64) string {
 
 func isCurl(r *http.Request) bool {
 	return strings.HasPrefix(r.UserAgent(), "curl/")
+}
+
+// newEngageProxy reverse-proxies /api/engage* to the react-engage Next.js
+// sidecar (see engage/ + docker-compose.yml). The sidecar owns all engagement
+// data in its own Postgres; the Go server only forwards.
+func newEngageProxy(upstream string) (http.HandlerFunc, error) {
+	target, err := url.Parse(upstream)
+	if err != nil {
+		return nil, err
+	}
+	proxy := httputil.NewSingleHostReverseProxy(target)
+	proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
+		log.Printf("engage proxy error: %v", err)
+		http.Error(w, "engagement service unavailable", http.StatusBadGateway)
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		r.Host = target.Host
+		proxy.ServeHTTP(w, r)
+	}, nil
+}
+
+// handleAdmin gates the react-engage admin panel behind HTTP Basic Auth. On a
+// valid login it drops an httpOnly `engage_admin` cookie whose value is
+// AdminSecret; the sidecar validates that same cookie to authorize admin API
+// calls. This is the pre-login scheme; Google sign-in will replace it later.
+func handleAdmin(w http.ResponseWriter, r *http.Request) {
+	if cfg.AdminUser == "" || cfg.AdminPass == "" || cfg.AdminSecret == "" {
+		http.Error(w, "admin is not configured", http.StatusServiceUnavailable)
+		return
+	}
+	user, pass, ok := r.BasicAuth()
+	userOK := subtle.ConstantTimeCompare([]byte(user), []byte(cfg.AdminUser)) == 1
+	passOK := subtle.ConstantTimeCompare([]byte(pass), []byte(cfg.AdminPass)) == 1
+	if !ok || !userOK || !passOK {
+		w.Header().Set("WWW-Authenticate", `Basic realm="dropfile admin", charset="UTF-8"`)
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name:     "engage_admin",
+		Value:    cfg.AdminSecret,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   strings.HasPrefix(cfg.BaseURL, "https://"),
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   12 * 60 * 60, // 12h
+	})
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("X-Robots-Tag", "noindex, nofollow")
+	w.Write(adminHTML)
 }
 
 func handleIndex(w http.ResponseWriter, r *http.Request) {
@@ -1069,6 +1148,39 @@ func main() {
 		w.Header().Set("Cache-Control", "public, max-age=86400")
 		w.Write(screenshotPNG)
 	})
+	mux.HandleFunc("GET /assets/engage.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/javascript; charset=utf-8")
+		w.Header().Set("Cache-Control", "public, max-age=3600")
+		w.Write(engageJS)
+	})
+	mux.HandleFunc("GET /assets/engage.css", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/css; charset=utf-8")
+		w.Header().Set("Cache-Control", "public, max-age=3600")
+		w.Write(engageCSS)
+	})
+	mux.HandleFunc("GET /assets/engage-admin.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/javascript; charset=utf-8")
+		w.Header().Set("Cache-Control", "public, max-age=3600")
+		w.Write(engageAdminJS)
+	})
+	mux.HandleFunc("GET /assets/engage-admin.css", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/css; charset=utf-8")
+		w.Header().Set("Cache-Control", "public, max-age=3600")
+		w.Write(engageAdminCSS)
+	})
+	mux.HandleFunc("GET /admin", handleAdmin)
+	mux.HandleFunc("GET /admin/{$}", handleAdmin)
+	if engageProxy, err := newEngageProxy(cfg.EngageUpstream); err != nil {
+		log.Fatalf("Failed to configure engage proxy: %v", err)
+	} else {
+		// Explicit methods so these literal paths outrank the "/{id}/{filename}"
+		// download pattern (a method-less pattern would be ambiguous against it).
+		mux.HandleFunc("GET /api/engage", engageProxy)
+		mux.HandleFunc("POST /api/engage", engageProxy)
+		mux.HandleFunc("GET /api/engage/{path...}", engageProxy)
+		mux.HandleFunc("POST /api/engage/{path...}", engageProxy)
+		log.Printf("engage: proxying /api/engage -> %s", cfg.EngageUpstream)
+	}
 	mux.HandleFunc("GET /{id}/{filename}", handleDownload)
 	mux.HandleFunc("DELETE /{id}/{filename}", handleDelete)
 	mux.HandleFunc("PUT /{filename}", handleUpload)
