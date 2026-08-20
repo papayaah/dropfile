@@ -16,11 +16,12 @@ Browser ──▶ Go server (:8080, systemd, native)
                                                    └─▶ Postgres (container + volume)
 ```
 
-- **Widget** (`widget/`) — esbuild bundles react-engage's `EngageWidget` +
-  `EngageAdminPanel` into static JS/CSS under `assets/`, which `main.go` embeds
-  via `//go:embed`. Built **on the dev machine** (even for deploy), so it uses a
-  local `file:` link to react-engage → your unpublished edits show up instantly.
-- **Sidecar** (`engage/`) — a minimal Next.js app hosting react-engage's
+- **Widget** (`react-engage/widget/`) — esbuild bundles react-engage's
+  `EngageWidget` + `EngageAdminPanel` into static JS/CSS under `assets/`, which
+  `main.go` embeds via `//go:embed`. Built **on the dev machine** (even for
+  deploy), so it uses a local `file:` link to react-engage → your unpublished
+  edits show up instantly.
+- **Sidecar** (`react-engage/server/`) — a minimal Next.js app hosting react-engage's
   `/api/engage` route against dropfile's own Postgres. Built **on the server**
   (Docker), so it depends on react-engage from **npm**.
 - **Go** (`main.go`) — reverse-proxies `/api/engage*` to the sidecar and serves
@@ -33,7 +34,7 @@ Browser ──▶ Go server (:8080, systemd, native)
 docker compose up -d --build          # creates engage_* tables automatically
 
 # 2. Widget bundle (rebuild after ANY react-engage edit):
-cd widget && npm install && npm run build      # or: npm run watch
+cd react-engage/widget && npm install && npm run build      # or: npm run watch
 
 # 3. Go server:
 go run main.go                        # http://localhost:8080
@@ -43,9 +44,9 @@ The widget launcher appears bottom-right (a bottom action-sheet on mobile).
 FAQ works with no backend; submitting needs the sidecar (step 1).
 
 To iterate on react-engage: edit `../tradingdiary/packages/react-engage`, then
-`cd widget && npm run build` (frontend changes) — no publish needed. For
-**server-side** react-engage changes, `npm publish` it, then in `engage/`
-`npm update @reactkits.dev/react-engage`.
+`cd react-engage/widget && npm run build` (frontend changes) — no publish needed.
+For **server-side** react-engage changes, `npm publish` it, then in
+`react-engage/server/` `npm update @reactkits.dev/react-engage`.
 
 ## Admin
 
@@ -68,6 +69,6 @@ Without them, submissions still persist to Postgres — just no email.
 ## Deploy
 
 `./deploy.sh` builds the widget, compiles the Go binary (with the widget
-embedded), rsyncs the binary + `engage/` + `docker-compose.yml`, runs
+embedded), rsyncs the binary + `react-engage/server/` + `docker-compose.yml`, runs
 `docker compose up -d --build` (Postgres + sidecar), and restarts the `dropfile`
 service. Requires **Docker + Docker Compose on the server**.

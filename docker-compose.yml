@@ -20,7 +20,7 @@ services:
       retries: 20
 
   engage:
-    build: ./engage
+    build: ./react-engage/server
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://postgres:postgres@engage-db:5432/dropfile_engage

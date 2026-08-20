@@ -234,8 +234,8 @@ var ogImagePNG []byte
 //go:embed robots.txt
 var robotsTXT []byte
 
-// Prebuilt react-engage widget bundle (see widget/). Rebuild with
-// `cd widget && npm run build` after editing react-engage.
+// Prebuilt react-engage widget bundle (see react-engage/widget/). Rebuild with
+// `cd react-engage/widget && npm run build` after editing react-engage.
 //
 //go:embed assets/engage.js
 var engageJS []byte
@@ -560,7 +560,7 @@ func isCurl(r *http.Request) bool {
 }
 
 // newEngageProxy reverse-proxies /api/engage* to the react-engage Next.js
-// sidecar (see engage/ + docker-compose.yml). The sidecar owns all engagement
+// sidecar (see react-engage/server/ + docker-compose.yml). The sidecar owns all engagement
 // data in its own Postgres; the Go server only forwards.
 func newEngageProxy(upstream string) (http.HandlerFunc, error) {
 	target, err := url.Parse(upstream)

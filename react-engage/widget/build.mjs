@@ -16,7 +16,7 @@ const options = {
   minify: true,
   format: 'iife',
   target: ['es2020'],
-  outdir: '../assets',
+  outdir: '../../assets',
   entryNames: '[name]',
   assetNames: 'asset-[name]',
   loader: { '.css': 'css', '.svg': 'dataurl', '.png': 'dataurl' },
@@ -35,5 +35,5 @@ if (process.argv.includes('--watch')) {
   console.log('[engage-widget] watching for changes... (rebuilds on react-engage edits)');
 } else {
   await esbuild.build(options);
-  console.log('[engage-widget] built ../assets/engage.js + ../assets/engage.css');
+  console.log('[engage-widget] built assets/engage.js + assets/engage.css');
 }

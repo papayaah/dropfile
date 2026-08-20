@@ -12,7 +12,7 @@ fi
 # 1. Rebuild the react-engage widget bundle from the published npm package so the
 #    embedded assets/engage.js|css are current, then compile it into the binary.
 echo "[WIDGET] Building react-engage widget bundle..."
-( cd widget && npm ci --silent && npm run build )
+( cd react-engage/widget && npm ci --silent && npm run build )
 
 echo "[BUILD] Building Go binary for Linux..."
 GOOS=linux GOARCH=amd64 $GO_BINARY_PATH build -o dropfile_linux main.go
@@ -24,11 +24,12 @@ rsync -azP dropfile_linux $DEPLOY_SERVER:$DEPLOY_DEST/dropfile
 #    the Postgres + sidecar containers on the server. The Go binary reaches the
 #    sidecar over 127.0.0.1:3001 (ENGAGE_UPSTREAM).
 echo "[ENGAGE] Syncing sidecar source to $DEPLOY_SERVER..."
+ssh $DEPLOY_SERVER "mkdir -p $DEPLOY_DEST/react-engage"
 rsync -azP --delete \
   --exclude 'node_modules/' \
   --exclude '.next/' \
   --exclude '.env' \
-  engage/ $DEPLOY_SERVER:$DEPLOY_DEST/engage/
+  react-engage/server/ $DEPLOY_SERVER:$DEPLOY_DEST/react-engage/server/
 rsync -azP docker-compose.yml $DEPLOY_SERVER:$DEPLOY_DEST/docker-compose.yml
 
 echo "[ENGAGE] Building & starting containers on server..."
