@@ -53,31 +53,27 @@
   .stat-badge{font-size:.75rem;color:var(--muted);background:var(--surface);border:1px solid var(--border);padding:.25rem .65rem;border-radius:100px;box-shadow:0 1px 3px rgba(0,0,0,0.02)}
   .stat-badge strong{color:var(--text);font-weight:700}
 
-  /* Top Clipboard Paste Section */
-  .paste-top-card{
-    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-    padding:1.5rem;margin-bottom:1.5rem;text-align:center;
-    box-shadow:0 4px 12px -2px rgba(0,0,0,0.03);
-  }
-  .paste-top-title{font-size:1.05rem;font-weight:700;margin-bottom:.4rem;color:var(--text)}
-  .paste-top-desc{font-size:.85rem;color:var(--muted);margin-bottom:1.2rem}
-  
-  .btn-mobile-paste{
-    background:var(--accent);color:#fff;border:none;
-    padding:.85rem 1.75rem;border-radius:12px;font-size:1rem;font-weight:700;
-    cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
-    box-shadow:0 4px 14px rgba(99,102,241,0.3);transition:all .2s;
-  }
-  .btn-mobile-paste:hover{transform:translateY(-1px);opacity:0.95}
-
   /* Main Upload Dropzone */
-  .dropzone{border:2px dashed var(--border);border-radius:var(--radius);padding:3rem 2rem;text-align:center;cursor:pointer;transition:all .3s cubic-bezier(0.4,0,0.2,1);background:var(--surface);position:relative;box-shadow:0 10px 30px -10px rgba(0,0,0,0.05)}
+  .dropzone{
+    border:2px dashed var(--border);border-radius:var(--radius);
+    padding:2.5rem 2rem;text-align:center;cursor:pointer;
+    transition:all .3s cubic-bezier(0.4,0,0.2,1);background:var(--surface);
+    position:relative;box-shadow:0 10px 30px -10px rgba(0,0,0,0.05);
+  }
   .dropzone:hover,.dropzone.dragover{border-color:var(--accent);background:var(--accent-glow);transform:translateY(-2px);box-shadow:0 20px 40px -15px rgba(99,102,241,0.1)}
   .drop-icon{margin-bottom:.75rem;display:inline-flex;align-items:center;justify-content:center;color:var(--accent);opacity:.9}
   .drop-text{font-size:1.2rem;font-weight:600;margin-bottom:.4rem}
   .drop-hint{color:var(--muted);font-size:.88rem}
   kbd{background:var(--border);padding:.15rem .4rem;border-radius:4px;font-family:inherit;font-size:.8rem;font-weight:600}
   input[type=file]{display:none}
+
+  .btn-paste{
+    margin-top:1.25rem;background:var(--accent);color:#fff;border:none;
+    padding:.75rem 1.6rem;border-radius:12px;font-size:.95rem;font-weight:700;
+    cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+    box-shadow:0 4px 14px rgba(99,102,241,0.3);transition:all .2s;
+  }
+  .btn-paste:hover{transform:translateY(-1px);opacity:0.95}
 
   /* Terminal (Theme Adaptive) */
   .terminal{
@@ -92,29 +88,39 @@
   .terminal .prompt{color:var(--success);font-weight:700}
   .terminal .url{color:var(--accent);font-weight:600}
 
-  /* Bottom Side-by-Side Grid */
-  .side-by-side-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:2.5rem}
-  @media(max-width:768px){.side-by-side-grid{grid-template-columns:1fr}}
-
-  /* Section Titles */
+  /* Unified Activity Feed */
+  .activity-section{margin-top:2.5rem}
   .section-title{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between}
   
-  .history-list,.sync-list{display:flex;flex-direction:column;gap:.75rem}
-  .item{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:.85rem 1rem;display:flex;align-items:center;gap:.75rem;font-size:.85rem;animation:slideIn .3s ease-out;position:relative;transition:all .2s;box-shadow:0 2px 6px rgba(0,0,0,0.02)}
+  .feed-list{display:flex;flex-direction:column;gap:.75rem}
+  .item{
+    background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:0;display:flex;align-items:center;font-size:.85rem;
+    animation:slideIn .3s ease-out;position:relative;transition:all .2s;
+    box-shadow:0 2px 6px rgba(0,0,0,0.02);overflow:hidden;min-height:56px;
+  }
   .item:hover{border-color:var(--accent);transform:translateX(2px)}
-  @keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-
-  .item .icon{width:34px;height:34px;border-radius:8px;background:rgba(100,116,139,0.08);display:flex;align-items:center;justify-content:center;color:var(--muted);flex-shrink:0}
-  .item .info{flex:1;min-width:0}
+  .item .icon{
+    width:56px;height:56px;background:rgba(100,116,139,0.08);
+    border-right:1px solid var(--border);display:flex;align-items:center;
+    justify-content:center;color:var(--muted);flex-shrink:0;margin:0;padding:0;
+  }
+  .item.is-text .icon{color:var(--accent)}
+  .item .thumb{
+    width:56px;height:56px;overflow:hidden;
+    background:rgba(100,116,139,0.08);border-right:1px solid var(--border);
+    flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    padding:0;margin:0;position:relative;transition:opacity .15s ease;
+  }
+  .item .thumb:hover{opacity:0.9}
+  .item .thumb img{width:100%;height:100%;object-fit:cover;display:block;margin:0;padding:0;border:none}
+  .item .thumb .fallback-icon{width:100%;height:100%;display:none;align-items:center;justify-content:center;color:var(--muted)}
+  .item .info{flex:1;min-width:0;padding:.5rem .85rem}
   .item .fname{font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px}
   .item .fname a{color:inherit}
+  .item .text-preview{font-size:.88rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px}
   .item .fmeta{color:var(--muted);font-size:.75rem}
-
-  /* Clipboard Item */
-  .clipboard-item{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem 1.15rem;margin-bottom:.75rem;position:relative;transition:all .2s;box-shadow:0 2px 6px rgba(0,0,0,0.02)}
-  .clipboard-item:hover{border-color:var(--accent)}
-  .clipboard-content{font-family:inherit;font-size:.88rem;line-height:1.45;white-space:pre-wrap;word-break:break-all;color:var(--text);margin-bottom:.75rem}
-  .clipboard-meta{display:flex;justify-content:space-between;align-items:center;font-size:.75rem;color:var(--muted)}
+  .item .action-btns{padding-right:.75rem}
 
   /* Action Buttons & Icons */
   .action-btns{display:flex;align-items:center;gap:.4rem;flex-shrink:0}
@@ -148,11 +154,49 @@
   footer{text-align:center;padding:4rem 1.5rem;color:var(--muted);font-size:.85rem;opacity:0.6}
   footer .sep{margin:0 .4rem;opacity:.4}
   
-  /* Upload Progress */
-  .upload-area{margin-top:1.5rem}
-  .upload-progress-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.75rem}
-  .progress-bg{height:6px;background:var(--border);border-radius:3px;margin-top:.75rem;overflow:hidden}
-  .progress-fill{height:100%;background:var(--accent);width:0%;transition:width .1s}
+  /* Image Lightbox Modal */
+  .image-modal{
+    position:fixed;inset:0;z-index:2000;
+    background:rgba(0,0,0,0.8);backdrop-filter:blur(8px);
+    display:flex;align-items:center;justify-content:center;
+    padding:1.5rem;opacity:0;pointer-events:none;
+    transition:opacity .2s cubic-bezier(0.16,1,0.3,1);
+  }
+  .image-modal.active{opacity:1;pointer-events:auto}
+  .image-modal-dialog{
+    position:relative;max-width:90vw;max-height:90vh;
+    background:var(--surface);border:1px solid var(--border);border-radius:18px;
+    padding:1rem;display:flex;flex-direction:column;gap:.75rem;
+    box-shadow:0 25px 60px -15px rgba(0,0,0,0.5);
+    transform:scale(0.95);transition:transform .2s cubic-bezier(0.16,1,0.3,1);
+  }
+  .image-modal.active .image-modal-dialog{transform:scale(1)}
+  .image-modal-close{
+    position:absolute;top:-14px;right:-14px;
+    width:36px;height:36px;border-radius:50%;
+    background:var(--surface);border:1px solid var(--border);
+    color:var(--text);display:flex;align-items:center;justify-content:center;
+    cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15);
+    transition:all .15s;z-index:10;
+  }
+  .image-modal-close:hover{transform:scale(1.1);border-color:var(--accent);color:var(--accent)}
+  .image-modal-preview{
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;border-radius:12px;background:rgba(0,0,0,0.03);
+    max-height:calc(85vh - 70px);
+  }
+  [data-theme="dark"] .image-modal-preview{background:rgba(255,255,255,0.02)}
+  .image-modal-preview img{
+    max-width:100%;max-height:calc(85vh - 70px);
+    object-fit:contain;border-radius:8px;display:block;
+  }
+  .image-modal-footer{
+    display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:0 .25rem;
+  }
+  .image-modal-title{
+    font-size:.88rem;font-weight:600;color:var(--text);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60vw;
+  }
 </style>
 </head>
 <body>
@@ -176,55 +220,35 @@
     </div>
   </header>
 
-  <!-- 1. Top Section: Clipboard Paste Card -->
-  <div class="paste-top-card">
-    <div class="paste-top-title">Real-Time Clipboard Sync</div>
-    <div class="paste-top-desc">Instantly sync text across devices on your local network</div>
-    <button class="btn-mobile-paste" id="pasteBtn" onclick="readClipboard(event)">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
-      Paste from Clipboard
-    </button>
-  </div>
-
-  <!-- 2. Dropzone Section -->
+  <!-- Dropzone & Paste Section -->
   <div class="dropzone" id="dropzone">
     <div class="drop-icon">
       <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
     </div>
     <div class="drop-text">Drop files here or click to browse</div>
-    <div class="drop-hint">Max 100MB per file &middot; <kbd id="shortcutHint">Ctrl+V</kbd> to sync clipboard</div>
+    <div class="drop-hint">Max 100MB per file &middot; <kbd id="shortcutHint">Cmd+V</kbd> to paste</div>
+    <button class="btn-paste" id="pasteBtn" onclick="readClipboard(event)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+      Paste from Clipboard
+    </button>
     <input type="file" id="fileInput" multiple>
   </div>
 
   <div class="upload-area" id="uploadArea"></div>
 
-  <!-- 3. Terminal Command Section (Theme Adaptive) -->
+  <!-- Terminal Command Section -->
   <div class="terminal">
     <code><span class="prompt">$</span> curl <span class="url">dropfile.dev</span> -T your_file.txt</code>
   </div>
 
-  <!-- 4. Bottom Side-by-Side Grid: Live Clipboard & Recent Uploads -->
-  <div class="side-by-side-grid">
-    <!-- Left Column: Live Clipboard -->
-    <div class="clipboard-col">
-      <div class="section-title">
-        <span>Live Clipboard</span>
-        <button class="btn-clear" onclick="clearClipboard()">Clear</button>
-      </div>
-      <div id="clipboardList" class="sync-list">
-        <div class="history-empty" id="clipboardEmpty">Pasted text will appear here instantly.</div>
-      </div>
+  <!-- Unified Recent Activity Feed -->
+  <div class="activity-section">
+    <div class="section-title">
+      <span>Recent Activity</span>
+      <button class="btn-clear" onclick="clearFeed()">Clear</button>
     </div>
-
-    <!-- Right Column: Recent Files -->
-    <div class="files-col">
-      <div class="section-title">
-        <span>Recent Files</span>
-        <button class="btn-clear" onclick="clearHistory()">Clear</button>
-      </div>
-      <div id="historyList" class="history-list">
-        <div class="history-empty">No files shared yet.</div>
-      </div>
+    <div id="feedList" class="feed-list">
+      <div class="history-empty">No files or clips shared yet.</div>
     </div>
   </div>
 
@@ -257,6 +281,32 @@
     <span class="sep">|</span>
     no account needed
   </footer>
+</div>
+
+<!-- Image Lightbox Modal -->
+<div class="image-modal" id="imageModal" onclick="closeImageModal(event)">
+  <div class="image-modal-dialog" onclick="event.stopPropagation()">
+    <button class="image-modal-close" onclick="closeImageModal()" title="Close (Esc)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="image-modal-preview">
+      <img id="modalImg" src="" alt="Preview">
+    </div>
+    <div class="image-modal-footer">
+      <span class="image-modal-title" id="modalTitle"></span>
+      <div class="action-btns">
+        <a id="modalDownload" href="#" download class="btn-action-icon light" title="Download file">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+        </a>
+        <button id="modalCopyLink" class="btn-action-icon light" title="Copy Image URL">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        </button>
+        <button id="modalCopyImage" class="btn-action-icon primary" title="Copy Image to clipboard">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -309,9 +359,9 @@ function connectSync() {
   eventSource.addEventListener('sync', e => {
     const { type, data } = JSON.parse(e.data);
     if (type === 'file') {
-      saveToHistory(data, false);
+      saveFileToFeed(data);
     } else if (type === 'text') {
-      addToClipboard(data, false);
+      saveTextToFeed(data);
     } else if (type === 'stats') {
       updateLiveStats(data);
     }
@@ -339,15 +389,37 @@ document.ondrop = e => {
   if (e.dataTransfer.files.length) [...e.dataTransfer.files].forEach(uploadFile);
 };
 
-// Clipboard Paste
+// Clipboard Paste (Cmd+V / Ctrl+V)
 document.onpaste = e => {
-  const files = e.clipboardData.files;
-  if (files.length) {
+  // 1. Check for files (e.g. copied files)
+  const files = e.clipboardData?.files;
+  if (files && files.length) {
     [...files].forEach(uploadFile);
-  } else {
-    const text = e.clipboardData.getData('text');
-    if (text) sendClipboard(text);
+    return;
   }
+
+  // 2. Check for image items (e.g. screenshot or image copied)
+  const items = e.clipboardData?.items;
+  if (items) {
+    let hasImage = false;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        const blob = items[i].getAsFile();
+        if (blob) {
+          let ext = items[i].type.split('/')[1] || 'png';
+          if (ext === 'jpeg') ext = 'jpg';
+          const file = new File([blob], `image_${Date.now()}.${ext}`, { type: items[i].type });
+          uploadFile(file);
+          hasImage = true;
+        }
+      }
+    }
+    if (hasImage) return;
+  }
+
+  // 3. Fallback to text
+  const text = e.clipboardData?.getData('text');
+  if (text && text.trim()) sendClipboard(text);
 };
 
 const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
@@ -359,17 +431,56 @@ if (shortcutHint) {
 async function readClipboard(e) {
   if (e) e.stopPropagation();
   try {
-    if (!navigator.clipboard || !navigator.clipboard.readText) {
-      throw new Error('Clipboard API unavailable');
+    // 1. Try reading clipboard items (supports images and text)
+    if (navigator.clipboard && navigator.clipboard.read) {
+      const items = await navigator.clipboard.read();
+      let handled = false;
+
+      // Check for image types first
+      for (const item of items) {
+        const imageType = item.types.find(t => t.startsWith('image/'));
+        if (imageType) {
+          const blob = await item.getType(imageType);
+          let ext = imageType.split('/')[1] || 'png';
+          if (ext === 'jpeg') ext = 'jpg';
+          const file = new File([blob], `image_${Date.now()}.${ext}`, { type: imageType });
+          uploadFile(file);
+          handled = true;
+        }
+      }
+
+      if (handled) {
+        showPasteSuccess('Image Uploaded!');
+        return;
+      }
+
+      // Check for text in clipboard items
+      for (const item of items) {
+        if (item.types.includes('text/plain')) {
+          const blob = await item.getType('text/plain');
+          const text = await blob.text();
+          if (text && text.trim()) {
+            sendClipboard(text);
+            showPasteSuccess('Pasted!');
+            return;
+          }
+        }
+      }
     }
-    const text = await navigator.clipboard.readText();
-    if (text) {
-      sendClipboard(text);
-      showPasteSuccess();
-    } else {
-      promptManualPaste();
+
+    // 2. Fallback: try readText
+    if (navigator.clipboard && navigator.clipboard.readText) {
+      const text = await navigator.clipboard.readText();
+      if (text && text.trim()) {
+        sendClipboard(text);
+        showPasteSuccess('Pasted!');
+        return;
+      }
     }
+
+    promptManualPaste();
   } catch (err) {
+    console.warn('Clipboard read error:', err);
     promptManualPaste();
   }
 }
@@ -377,22 +488,22 @@ async function readClipboard(e) {
 function promptManualPaste() {
   const shortcut = isMac ? 'Cmd+V' : 'Ctrl+V';
   const text = prompt('Paste your text here (' + shortcut + '):');
-  if (text) {
+  if (text && text.trim()) {
     sendClipboard(text);
-    showPasteSuccess();
+    showPasteSuccess('Pasted!');
   }
 }
 
-function showPasteSuccess() {
+function showPasteSuccess(msg = 'Pasted!') {
   const btn = document.getElementById('pasteBtn');
   if (!btn) return;
   const oldHTML = btn.innerHTML;
-  btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Pasted!`;
+  btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> ${msg}`;
   setTimeout(() => btn.innerHTML = oldHTML, 2000);
 }
 
 async function sendClipboard(text) {
-  addToClipboard(text, true); // Add locally immediately
+  saveTextToFeed(text); // Add locally immediately
   try {
     await fetch('/clipboard', {
       method: 'POST',
@@ -432,7 +543,7 @@ function uploadFile(file) {
   xhr.onload = () => {
     if (xhr.status === 201) {
       item.remove();
-      saveToHistory(JSON.parse(xhr.responseText), true);
+      saveFileToFeed(JSON.parse(xhr.responseText));
     } else {
       percent.textContent = 'Error';
       percent.style.color = 'var(--error)';
@@ -441,89 +552,229 @@ function uploadFile(file) {
   xhr.send(fd);
 }
 
-// Data Management
+// Unified Feed Data Management
 function getStorage(key) { try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch { return []; } }
 function setStorage(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
 
-function saveToHistory(data, local) {
-  const history = getStorage('dropfile_history');
-  if (history.find(h => h.url === data.url)) return; // Avoid dups
-  history.unshift(data);
-  if (history.length > 50) history.length = 50;
-  setStorage('dropfile_history', history);
-  renderHistory();
+function getFeed() {
+  let feed = getStorage('dropfile_feed');
+  if (!feed || !feed.length) {
+    const history = getStorage('dropfile_history');
+    const clips = getStorage('dropfile_clipboard');
+    const combined = [
+      ...history.map(h => ({ type: 'file', ...h, time: h.time || new Date().toISOString() })),
+      ...clips.map(c => ({ type: 'text', text: c.text, time: c.time || new Date().toISOString() }))
+    ].sort((a, b) => new Date(b.time) - new Date(a.time));
+    if (combined.length) {
+      feed = combined.slice(0, 50);
+      setStorage('dropfile_feed', feed);
+    }
+  }
+  return feed || [];
+}
+
+function saveFileToFeed(data) {
+  const feed = getFeed();
+  if (feed.find(f => f.type === 'file' && f.url === data.url)) return;
+  feed.unshift({ type: 'file', ...data, time: new Date().toISOString() });
+  if (feed.length > 50) feed.length = 50;
+  setStorage('dropfile_feed', feed);
+  renderFeed();
+}
+
+function saveTextToFeed(text) {
+  const feed = getFeed();
+  if (feed[0]?.type === 'text' && feed[0].text === text) return;
+  feed.unshift({ type: 'text', text, time: new Date().toISOString() });
+  if (feed.length > 50) feed.length = 50;
+  setStorage('dropfile_feed', feed);
+  renderFeed();
+}
+
+function clearFeed() {
+  setStorage('dropfile_feed', []);
+  setStorage('dropfile_history', []);
+  setStorage('dropfile_clipboard', []);
+  renderFeed();
 }
 
 const fileSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>`;
+const textSvg = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>`;
 const expiredSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>`;
 const downloadSvg = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>`;
 const openSvg = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>`;
+const linkSvg = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`;
 const copySvg = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>`;
 const checkSvg = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
 
-function renderHistory() {
-  const list = document.getElementById('historyList');
-  const history = getStorage('dropfile_history');
-  if (!history.length) {
-    list.innerHTML = '<div class="history-empty">No files shared yet.</div>';
+const imageModal = document.getElementById('imageModal');
+const modalImg = document.getElementById('modalImg');
+const modalTitle = document.getElementById('modalTitle');
+const modalDownload = document.getElementById('modalDownload');
+const modalCopyLink = document.getElementById('modalCopyLink');
+const modalCopyImage = document.getElementById('modalCopyImage');
+
+function isImage(filename) {
+  return /\.(png|jpe?g|gif|webp|svg|bmp|ico|avif)$/i.test(filename || '');
+}
+
+function openImageModal(url, filename) {
+  if (!imageModal) return;
+  modalImg.src = url;
+  modalImg.alt = filename;
+  modalTitle.textContent = filename;
+  modalDownload.href = url;
+  modalDownload.setAttribute('download', filename);
+  modalCopyLink.onclick = () => copyToClipboard(url, modalCopyLink);
+  modalCopyImage.onclick = () => copyImageToClipboard(url, modalCopyImage);
+  imageModal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeImageModal(e) {
+  if (e && e.target !== imageModal && !e.target.closest('.image-modal-close')) return;
+  if (!imageModal) return;
+  imageModal.classList.remove('active');
+  modalImg.src = '';
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && imageModal && imageModal.classList.contains('active')) {
+    closeImageModal();
+  }
+});
+
+async function copyImageToClipboard(url, btn) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Fetch failed: ' + res.status);
+    const rawBlob = await res.blob();
+    
+    // Always convert to clean PNG blob for clipboard
+    const pngBlob = await convertBlobToPng(rawBlob);
+    
+    await navigator.clipboard.write([
+      new ClipboardItem({ 'image/png': pngBlob })
+    ]);
+    
+    const oldHTML = btn.innerHTML;
+    btn.innerHTML = checkSvg;
+    setTimeout(() => btn.innerHTML = oldHTML, 2000);
+  } catch (err) {
+    console.error('Direct image copy failed:', err);
+    copyToClipboard(url, btn);
+  }
+}
+
+function convertBlobToPng(blob) {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width || 100;
+        canvas.height = img.naturalHeight || img.height || 100;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob(b => {
+          if (b) resolve(b);
+          else reject(new Error('Canvas conversion failed'));
+        }, 'image/png');
+      } catch (err) {
+        reject(err);
+      }
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Image load failed'));
+    };
+    img.src = objectUrl;
+  });
+}
+
+function renderFeed() {
+  const list = document.getElementById('feedList');
+  if (!list) return;
+  const feed = getFeed();
+  if (!feed.length) {
+    list.innerHTML = '<div class="history-empty">No files or clips shared yet.</div>';
     return;
   }
-  list.innerHTML = history.map(h => {
-    const expired = new Date(h.expires) < new Date();
+
+  list.innerHTML = feed.map(item => {
+    if (item.type === 'text') {
+      const isUrl = /^https?:\/\//i.test(item.text.trim());
+      const escapedText = esc(item.text);
+      const timeStr = item.time ? new Date(item.time).toLocaleTimeString() : '';
+      return `
+        <div class="item is-text">
+          <div class="icon">${textSvg}</div>
+          <div class="info">
+            <div class="text-preview">${escapedText}</div>
+            <div class="fmeta">${timeStr ? timeStr + ' &middot; ' : ''}text clip</div>
+          </div>
+          <div class="action-btns">
+            ${isUrl ? `<a href="${esc(item.text.trim())}" target="_blank" class="btn-action-icon light" title="Open Link">${openSvg}</a>` : ''}
+            <button class="btn-action-icon primary" title="Copy Text" onclick="copyToClipboard(\`${escapedText.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`, this)">${copySvg}</button>
+          </div>
+        </div>
+      `;
+    }
+
+    // File item (including images)
+    const expired = item.expires ? new Date(item.expires) < new Date() : false;
+    const isImg = !expired && isImage(item.filename);
+    const escapedUrl = esc(item.url);
+    const escapedName = esc(item.filename);
+
+    let iconHtml;
+    if (expired) {
+      iconHtml = `<div class="icon">${expiredSvg}</div>`;
+    } else if (isImg) {
+      iconHtml = `
+        <div class="thumb" title="Click to preview image" onclick="openImageModal('${escapedUrl}', '${escapedName}')">
+          <img src="${escapedUrl}" alt="${escapedName}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+          <span class="fallback-icon">${fileSvg}</span>
+        </div>
+      `;
+    } else {
+      iconHtml = `<div class="icon">${fileSvg}</div>`;
+    }
+
     return `
       <div class="item" style="${expired ? 'opacity:.6' : ''}">
-        <div class="icon">${expired ? expiredSvg : fileSvg}</div>
+        ${iconHtml}
         <div class="info">
-          <div class="fname"><a href="${esc(h.url)}" target="_blank" download title="Click to download">${esc(h.filename)}</a></div>
-          <div class="fmeta">${formatSize(h.size)}${expired ? ' &middot; expired' : ''}</div>
+          <div class="fname">
+            ${isImg ? `
+              <a href="javascript:void(0)" onclick="openImageModal('${escapedUrl}', '${escapedName}')" title="Preview image">${escapedName}</a>
+            ` : `
+              <a href="${escapedUrl}" target="_blank" download title="Click to download">${escapedName}</a>
+            `}
+          </div>
+          <div class="fmeta">${formatSize(item.size)}${expired ? ' &middot; expired' : ''}</div>
         </div>
         <div class="action-btns">
           ${!expired ? `
-            <a href="${esc(h.url)}" target="_blank" download class="btn-action-icon light" title="Download file">${downloadSvg}</a>
-            <a href="${esc(h.url)}" target="_blank" class="btn-action-icon light" title="Open in browser">${openSvg}</a>
-          ` : ''}
-          <button class="btn-action-icon primary" title="Copy Link" onclick="copyToClipboard('${esc(h.url)}', this)">${copySvg}</button>
+            <a href="${escapedUrl}" target="_blank" download="${escapedName}" class="btn-action-icon light" title="Download file">${downloadSvg}</a>
+            ${isImg ? `
+              <button class="btn-action-icon light" title="Copy Image URL" onclick="copyToClipboard('${escapedUrl}', this)">${linkSvg}</button>
+              <button class="btn-action-icon primary" title="Copy Image to clipboard (paste into Slack, Messenger, etc.)" onclick="copyImageToClipboard('${escapedUrl}', this)">${copySvg}</button>
+            ` : `
+              <a href="${escapedUrl}" target="_blank" class="btn-action-icon light" title="Open in browser">${openSvg}</a>
+              <button class="btn-action-icon primary" title="Copy Link" onclick="copyToClipboard('${escapedUrl}', this)">${copySvg}</button>
+            `}
+          ` : `
+            <button class="btn-action-icon primary" title="Copy Link" onclick="copyToClipboard('${escapedUrl}', this)">${copySvg}</button>
+          `}
         </div>
       </div>
     `;
   }).join('');
 }
-
-function addToClipboard(text, local) {
-  const snippets = getStorage('dropfile_clipboard');
-  if (snippets[0]?.text === text) return; // Simple dedupe for local
-  snippets.unshift({ text, time: new Date().toISOString() });
-  if (snippets.length > 20) snippets.length = 20;
-  setStorage('dropfile_clipboard', snippets);
-  renderClipboard();
-}
-
-function renderClipboard() {
-  const list = document.getElementById('clipboardList');
-  const snippets = getStorage('dropfile_clipboard');
-  if (!snippets.length) {
-    list.innerHTML = '<div class="history-empty">Pasted text will appear here.</div>';
-    return;
-  }
-  list.innerHTML = snippets.map(s => {
-    const isUrl = /^https?:\/\//i.test(s.text.trim());
-    return `
-      <div class="clipboard-item">
-        <div class="clipboard-content">${esc(s.text)}</div>
-        <div class="clipboard-meta">
-          <span>${new Date(s.time).toLocaleTimeString()}</span>
-          <div class="action-btns">
-            ${isUrl ? `<a href="${esc(s.text.trim())}" target="_blank" class="btn-action-icon light" title="Open Link">${openSvg}</a>` : ''}
-            <button class="btn-action-icon primary" title="Copy Text" onclick="copyToClipboard(\`${esc(s.text).replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`, this)">${copySvg}</button>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-function clearHistory() { setStorage('dropfile_history', []); renderHistory(); }
-function clearClipboard() { setStorage('dropfile_clipboard', []); renderClipboard(); }
 
 function copyToClipboard(val, btn) {
   navigator.clipboard.writeText(val);
@@ -544,8 +795,7 @@ function esc(s) {
   return d.innerHTML;
 }
 
-renderHistory();
-renderClipboard();
+renderFeed();
 </script>
 </body>
 </html>
