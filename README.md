@@ -12,7 +12,8 @@ Live Website: [https://dropfile.dev](https://dropfile.dev)
 - **No Account Needed**: Anonymous, fast, and zero registration required.
 - **Auto-Expiry**: Files automatically expire and are deleted after 7 days.
 - **Terminal-First**: Upload directly from your command line using `curl`.
-- **Real-Time Sync**: Instant live sync for devices on the same network / IP.
+- **Network Inbox**: Active files are restored on devices using the same network / IP, even if the receiving browser was closed during upload.
+- **Real-Time Sync**: Instant live sync while devices are online.
 - **Clipboard & File Sharing**: Share text snippets or drop files directly from your browser.
 
 ---
@@ -29,6 +30,8 @@ Live Website: [https://dropfile.dev](https://dropfile.dev)
 
 ### Browser
 Visit [https://dropfile.dev](https://dropfile.dev) and drag & drop files, click to browse, or paste (<kbd>Cmd+V</kbd> / <kbd>Ctrl+V</kbd>) from your clipboard.
+
+Files remain discoverable in the Network Inbox for their seven-day lifetime, so both browser windows do not need to be open at the same time. Clipboard text remains live and device-local rather than being stored on the server.
 
 ### Terminal (CLI)
 

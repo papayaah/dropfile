@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -102,6 +103,14 @@ type FileMeta struct {
 	UserAgent  string    `json:"user_agent,omitempty"`
 }
 
+type FeedFile struct {
+	URL      string    `json:"url"`
+	Filename string    `json:"filename"`
+	Size     int64     `json:"size"`
+	Expires  time.Time `json:"expires"`
+	Time     time.Time `json:"time"`
+}
+
 type SyncEvent struct {
 	Type string `json:"type"` // "file", "text", or "stats"
 	Data any    `json:"data"`
@@ -124,8 +133,8 @@ type StatsFile struct {
 }
 
 var (
-	statsMu        sync.Mutex
-	statsData      StatsFile
+	statsMu         sync.Mutex
+	statsData       StatsFile
 	statsFileLoaded bool
 )
 
@@ -335,6 +344,48 @@ func storageUsedByIP(ip string) int64 {
 		}
 	}
 	return total
+}
+
+// activeFilesForIP is the durable counterpart to the live event stream. It
+// lets a device catch up on uploads that happened while its browser was closed.
+func activeFilesForIP(ip string, limit int) []FeedFile {
+	entries, err := os.ReadDir(cfg.UploadDir)
+	if err != nil {
+		return []FeedFile{}
+	}
+
+	now := time.Now()
+	files := make([]FeedFile, 0)
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+
+		dirPath := filepath.Join(cfg.UploadDir, entry.Name())
+		meta, err := readMeta(dirPath)
+		if err != nil || meta.UploaderIP != ip || !now.Before(meta.ExpiresAt) {
+			continue
+		}
+		if _, err := os.Stat(filepath.Join(dirPath, meta.Filename)); err != nil {
+			continue
+		}
+
+		files = append(files, FeedFile{
+			URL:      fmt.Sprintf("%s/%s/%s", cfg.BaseURL, entry.Name(), meta.Filename),
+			Filename: meta.Filename,
+			Size:     meta.Size,
+			Expires:  meta.ExpiresAt,
+			Time:     meta.UploadedAt,
+		})
+	}
+
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].Time.After(files[j].Time)
+	})
+	if limit > 0 && len(files) > limit {
+		files = files[:limit]
+	}
+	return files
 }
 
 func checkUploadAllowed(ip string) string {
@@ -577,6 +628,7 @@ func handlePostUpload(w http.ResponseWriter, r *http.Request) {
 		"filename": filename,
 		"size":     n,
 		"expires":  meta.ExpiresAt.Format(time.RFC3339),
+		"time":     meta.UploadedAt.Format(time.RFC3339),
 	}
 
 	// Broadcast upload
@@ -663,6 +715,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 			"filename": filename,
 			"size":     n,
 			"expires":  meta.ExpiresAt.Format(time.RFC3339),
+			"time":     meta.UploadedAt.Format(time.RFC3339),
 		},
 	})
 	recordUpload(ip)
@@ -677,6 +730,14 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 		meta.ExpiresAt.Format("2006-01-02 15:04 UTC"),
 		downloadURL,
 	)
+}
+
+func handleInbox(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-store")
+	json.NewEncoder(w).Encode(map[string]any{
+		"files": activeFilesForIP(getClientIP(r), 50),
+	})
 }
 
 func handleDownload(w http.ResponseWriter, r *http.Request) {
@@ -810,7 +871,7 @@ func handleEvents(w http.ResponseWriter, r *http.Request) {
 
 	// Send initial heartbeat
 	fmt.Fprintf(w, "event: connected\ndata: {\"status\":\"ok\"}\n\n")
-	
+
 	// Send initial user quota stats
 	userStorage := storageUsedByIP(ip)
 	initStats := getLiveStats()
@@ -959,6 +1020,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{$}", handleIndex)
 	mux.HandleFunc("GET /events", handleEvents)
+	mux.HandleFunc("GET /inbox", handleInbox)
 	mux.HandleFunc("POST /clipboard", handleClipboard)
 	mux.HandleFunc("GET /theme/{$}", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "theme/index.html")

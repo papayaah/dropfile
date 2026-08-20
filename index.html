@@ -121,6 +121,7 @@
   /* Unified Activity Feed */
   .activity-section{margin-top:2.5rem}
   .section-title{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between}
+  .section-subtitle{font-size:.8rem;color:var(--muted);line-height:1.45;margin-top:-.55rem;margin-bottom:1rem}
   
   .feed-list{display:flex;flex-direction:column;gap:.75rem}
   .item{
@@ -298,7 +299,7 @@
       <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/></svg>
     </div>
     <div class="drop-text">Drop files here or click to browse</div>
-    <div class="drop-hint">Max 100MB per file &middot; <kbd id="shortcutHint">Cmd+V</kbd> to paste</div>
+    <div class="drop-hint">Available on this network for 7 days &middot; <kbd id="shortcutHint">Cmd+V</kbd> to paste</div>
     <button class="btn-paste" id="pasteBtn" onclick="readClipboard(event)">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
       Paste from Clipboard
@@ -316,9 +317,10 @@
   <!-- Unified Recent Activity Feed -->
   <div class="activity-section">
     <div class="section-title">
-      <span>Recent Activity</span>
-      <button class="btn-clear" onclick="clearFeed()">Clear</button>
+      <span>Your Network Inbox</span>
+      <button class="btn-clear" onclick="syncInbox()">Refresh</button>
     </div>
+    <p class="section-subtitle">Files uploaded from devices on this network will appear here—even if this page was closed at the time.</p>
     <div id="feedList" class="feed-list">
       <div class="history-empty">No files or clips shared yet.</div>
     </div>
@@ -443,8 +445,9 @@ function connectSync() {
   eventSource = new EventSource('/events');
   
   eventSource.onopen = () => {
-    statusBadge.textContent = 'Live Sync Active';
+    statusBadge.textContent = 'Inbox Synced';
     statusBadge.classList.add('live');
+    syncInbox();
   };
 
   eventSource.onerror = () => {
@@ -679,6 +682,29 @@ function saveFileToFeed(data) {
   if (feed.length > 50) feed.length = 50;
   setStorage('dropfile_feed', feed);
   renderFeed();
+}
+
+let inboxSyncPromise;
+function syncInbox() {
+  if (inboxSyncPromise) return inboxSyncPromise;
+  inboxSyncPromise = fetch('/inbox', { cache: 'no-store' })
+    .then(res => {
+      if (!res.ok) throw new Error('Inbox sync failed: ' + res.status);
+      return res.json();
+    })
+    .then(({ files = [] }) => {
+      const feed = getFeed();
+      const clips = feed.filter(item => item.type === 'text');
+      const serverFiles = files.map(file => ({ type: 'file', ...file }));
+      const merged = [...serverFiles, ...clips]
+        .sort((a, b) => new Date(b.time || 0) - new Date(a.time || 0))
+        .slice(0, 50);
+      setStorage('dropfile_feed', merged);
+      renderFeed();
+    })
+    .catch(err => console.error(err))
+    .finally(() => { inboxSyncPromise = null; });
+  return inboxSyncPromise;
 }
 
 function saveTextToFeed(text) {
@@ -933,6 +959,7 @@ function esc(s) {
 }
 
 renderFeed();
+syncInbox();
 </script>
 </body>
 </html>
