@@ -83,12 +83,13 @@ func (rl *rateLimiter) cleanup() {
 }
 
 type Config struct {
-	Port            string
-	UploadDir       string
-	MaxFileSize     int64
-	DefaultExpiry   time.Duration
-	CleanupInterval time.Duration
-	BaseURL         string
+	Port             string
+	UploadDir        string
+	MaxFileSize      int64
+	MaxGlobalStorage int64
+	DefaultExpiry    time.Duration
+	CleanupInterval  time.Duration
+	BaseURL          string
 }
 
 type FileMeta struct {
@@ -343,17 +344,22 @@ func checkUploadAllowed(ip string) string {
 	if storageUsedByIP(ip) >= maxStoragePerIP {
 		return "Storage limit reached (500 MB per user). Wait for files to expire.\n"
 	}
+	stats := getLiveStats()
+	if stats.TotalStorage >= cfg.MaxGlobalStorage {
+		return "Global server capacity limit reached (100 GB max). Please try again later.\n"
+	}
 	return ""
 }
 
 func loadConfig() Config {
 	c := Config{
-		Port:            envOr("PORT", "8080"),
-		UploadDir:       envOr("UPLOAD_DIR", "./uploads"),
-		MaxFileSize:     envOrInt64("MAX_FILE_SIZE", 100*1024*1024), // 100MB
-		DefaultExpiry:   envOrDuration("DEFAULT_EXPIRY", 168*time.Hour),
-		CleanupInterval: envOrDuration("CLEANUP_INTERVAL", 1*time.Hour),
-		BaseURL:         envOr("BASE_URL", "http://localhost:8080"), // Default for dev
+		Port:             envOr("PORT", "8080"),
+		UploadDir:        envOr("UPLOAD_DIR", "./uploads"),
+		MaxFileSize:      envOrInt64("MAX_FILE_SIZE", 100*1024*1024),          // 100MB
+		MaxGlobalStorage: envOrInt64("MAX_GLOBAL_STORAGE", 100*1024*1024*1024), // 100GB
+		DefaultExpiry:    envOrDuration("DEFAULT_EXPIRY", 168*time.Hour),
+		CleanupInterval:  envOrDuration("CLEANUP_INTERVAL", 1*time.Hour),
+		BaseURL:          envOr("BASE_URL", "http://localhost:8080"), // Default for dev
 	}
 	c.BaseURL = strings.TrimRight(c.BaseURL, "/")
 	return c
