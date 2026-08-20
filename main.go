@@ -272,14 +272,26 @@ func getLiveStats() LiveStats {
 
 func broadcastGlobalStats() {
 	stats := getLiveStats()
-	event := SyncEvent{
-		Type: "stats",
-		Data: stats,
-	}
 
 	clientsMu.Lock()
 	defer clientsMu.Unlock()
-	for _, list := range clients {
+	for ip, list := range clients {
+		userStorage := storageUsedByIP(ip)
+		event := SyncEvent{
+			Type: "stats",
+			Data: map[string]any{
+				"connected_devices":      stats.ConnectedDevices,
+				"active_files":           stats.ActiveFiles,
+				"total_storage":          stats.TotalStorage,
+				"formatted_storage":      stats.FormattedStorage,
+				"total_uploads":          stats.TotalUploads,
+				"total_clips":            stats.TotalClips,
+				"total_unique_ips":       stats.TotalUniqueIPs,
+				"user_storage":           userStorage,
+				"max_user_storage":       maxStoragePerIP,
+				"formatted_user_storage": formatBytes(userStorage),
+			},
+		}
 		for ch := range list {
 			select {
 			case ch <- event:
@@ -708,6 +720,52 @@ func handleDownload(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filePath)
 }
 
+func handleDelete(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	filename := sanitizeFilename(r.PathValue("filename"))
+	ip := getClientIP(r)
+
+	if id == "" || filename == "" {
+		http.Error(w, "Not found\n", http.StatusNotFound)
+		return
+	}
+
+	for _, c := range id {
+		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
+			http.Error(w, "Not found\n", http.StatusNotFound)
+			return
+		}
+	}
+
+	dirPath := filepath.Join(cfg.UploadDir, id)
+	meta, err := readMeta(dirPath)
+	if err != nil {
+		http.Error(w, "File not found\n", http.StatusNotFound)
+		return
+	}
+
+	if meta.UploaderIP != ip {
+		http.Error(w, "Unauthorized: only the uploader can delete this file\n", http.StatusForbidden)
+		return
+	}
+
+	os.RemoveAll(dirPath)
+
+	downloadURL := fmt.Sprintf("%s/%s/%s", cfg.BaseURL, id, filename)
+	broadcast(ip, SyncEvent{
+		Type: "delete",
+		Data: map[string]any{
+			"url":      downloadURL,
+			"filename": filename,
+			"id":       id,
+		},
+	})
+	go broadcastGlobalStats()
+
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "File deleted\n")
+}
+
 func handleEvents(w http.ResponseWriter, r *http.Request) {
 	ip := getClientIP(r)
 
@@ -746,6 +804,26 @@ func handleEvents(w http.ResponseWriter, r *http.Request) {
 
 	// Send initial heartbeat
 	fmt.Fprintf(w, "event: connected\ndata: {\"status\":\"ok\"}\n\n")
+	
+	// Send initial user quota stats
+	userStorage := storageUsedByIP(ip)
+	initStats := getLiveStats()
+	initEvent, _ := json.Marshal(SyncEvent{
+		Type: "stats",
+		Data: map[string]any{
+			"connected_devices":      initStats.ConnectedDevices,
+			"active_files":           initStats.ActiveFiles,
+			"total_storage":          initStats.TotalStorage,
+			"formatted_storage":      initStats.FormattedStorage,
+			"total_uploads":          initStats.TotalUploads,
+			"total_clips":            initStats.TotalClips,
+			"total_unique_ips":       initStats.TotalUniqueIPs,
+			"user_storage":           userStorage,
+			"max_user_storage":       maxStoragePerIP,
+			"formatted_user_storage": formatBytes(userStorage),
+		},
+	})
+	fmt.Fprintf(w, "event: sync\ndata: %s\n\n", initEvent)
 	flusher.Flush()
 
 	ticker := time.NewTicker(30 * time.Second)
@@ -924,6 +1002,7 @@ func main() {
 		w.Write(screenshotPNG)
 	})
 	mux.HandleFunc("GET /{id}/{filename}", handleDownload)
+	mux.HandleFunc("DELETE /{id}/{filename}", handleDelete)
 	mux.HandleFunc("PUT /{filename}", handleUpload)
 	mux.HandleFunc("POST /{$}", handlePostUpload)
 
