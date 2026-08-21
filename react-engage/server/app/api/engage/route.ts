@@ -6,6 +6,7 @@ import {
   engageSubscribers,
   engageTemplates,
   engageBroadcasts,
+  engageSuggestionVotes,
 } from '@/lib/schema';
 
 // Constant-time secret comparison so admin auth can't be timing-probed.
@@ -27,6 +28,7 @@ export const { GET, POST } = createEngageRouteHandler({
     subscribers: engageSubscribers,
     templates: engageTemplates,
     broadcasts: engageBroadcasts,
+    suggestionVotes: engageSuggestionVotes,
   },
   // Interim admin auth until Google sign-in. The Go server gates /admin behind
   // HTTP Basic Auth and, on success, sets an httpOnly `engage_admin` cookie
