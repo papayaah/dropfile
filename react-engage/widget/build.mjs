@@ -1,9 +1,8 @@
 // Bundles the react-engage widget (React component + its CSS) into a single
 // static JS/CSS pair under ../assets, which main.go embeds via //go:embed.
 //
-// Because @reactkits.dev/react-engage is linked with `file:` to the live source
-// in ../../tradingdiary/packages/react-engage, every edit you make there flows
-// into dropfile on the next `npm run build` (or live via `npm run watch`).
+// React Engage is installed from npm so this bundle is reproducible and cannot
+// accidentally include dependencies from a neighboring development checkout.
 import * as esbuild from 'esbuild';
 
 /** @type {import('esbuild').BuildOptions} */
@@ -21,10 +20,6 @@ const options = {
   assetNames: 'asset-[name]',
   loader: { '.css': 'css', '.svg': 'dataurl', '.png': 'dataurl' },
   jsx: 'automatic',
-  // react-engage is a `file:`-linked package; without this esbuild would resolve
-  // its `react` import from tradingdiary and bundle a second React copy, breaking
-  // hooks. preserveSymlinks pins all bare imports to dropfile/widget/node_modules.
-  preserveSymlinks: true,
   define: { 'process.env.NODE_ENV': '"production"' },
   logLevel: 'info',
 };

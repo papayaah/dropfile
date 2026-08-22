@@ -15,6 +15,8 @@ if (el) {
       theme="inherit"
       position="bottom-right"
       accentColor="#6366f1"
+      iconOnly
+      enabledTabs={['faq', 'feedback']}
       faqs={DROPFILE_FAQS}
     />,
   );
