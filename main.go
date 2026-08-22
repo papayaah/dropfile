@@ -23,6 +23,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/joho/godotenv"
+
 	_ "embed"
 )
 
@@ -431,7 +433,7 @@ func loadConfig() Config {
 	c := Config{
 		Port:             envOr("PORT", "8080"),
 		UploadDir:        envOr("UPLOAD_DIR", "./uploads"),
-		MaxFileSize:      envOrInt64("MAX_FILE_SIZE", 100*1024*1024),          // 100MB
+		MaxFileSize:      envOrInt64("MAX_FILE_SIZE", 100*1024*1024),           // 100MB
 		MaxGlobalStorage: envOrInt64("MAX_GLOBAL_STORAGE", 100*1024*1024*1024), // 100GB
 		DefaultExpiry:    envOrDuration("DEFAULT_EXPIRY", 168*time.Hour),
 		CleanupInterval:  envOrDuration("CLEANUP_INTERVAL", 1*time.Hour),
@@ -1063,6 +1065,9 @@ func cleanExpiredUploads() {
 }
 
 func main() {
+	if err := godotenv.Load(); err != nil && !errors.Is(err, os.ErrNotExist) {
+		log.Printf("Warning: failed to load .env: %v", err)
+	}
 	cfg = loadConfig()
 
 	if err := os.MkdirAll(cfg.UploadDir, 0755); err != nil {
