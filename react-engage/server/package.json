@@ -9,7 +9,7 @@
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
-    "@reactkits.dev/react-engage": "^0.3.0",
+    "@reactkits.dev/react-engage": "^0.4.0",
     "drizzle-orm": "^0.45.1",
     "next": "16.1.6",
     "postgres": "^3.4.8",

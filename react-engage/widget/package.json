@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@reactkits.dev/react-engage": "file:../../../tradingdiary/packages/react-engage",
+    "html-to-image": "^1.11.13",
     "lucide-react": "^0.563.0",
     "react": "19.2.3",
     "react-dom": "19.2.3"
